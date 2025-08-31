@@ -60,7 +60,7 @@ node_modules/
 
 # Gatsby files
 .cache/
-public
+# public (React 앱에서는 필요함)
 
 # Storybook build outputs
 .out
