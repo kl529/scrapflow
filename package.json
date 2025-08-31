@@ -1,0 +1,100 @@
+{
+  "name": "scrapflow",
+  "version": "1.0.0",
+  "description": "스크린샷 기반 스크랩북 데스크톱 애플리케이션",
+  "main": "src/main/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run dev-react\" \"wait-on http://localhost:3000 && electron .\"",
+    "dev-react": "react-scripts start",
+    "build": "react-scripts build",
+    "build-electron": "npm run build && electron-builder",
+    "build-win": "npm run build && electron-builder --win",
+    "build-mac": "npm run build && electron-builder --mac",
+    "build-linux": "npm run build && electron-builder --linux",
+    "build-all": "npm run build && electron-builder --win --mac --linux",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "screenshot",
+    "scrapbook",
+    "desktop-app"
+  ],
+  "author": "ScrapFlow Team",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^26.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.15.0",
+    "sqlite3": "^5.1.6",
+    "screenshot-desktop": "^1.15.0",
+    "electron-is-dev": "^2.0.0",
+    "react-hot-toast": "^2.4.1",
+    "date-fns": "^2.30.0",
+    "uuid": "^9.0.0",
+    "sharp": "^0.32.6"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.6.4",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.0.1",
+    "tailwindcss": "^3.3.3",
+    "autoprefixer": "^10.4.15",
+    "postcss": "^8.4.29",
+    "react-scripts": "^5.0.1"
+  },
+  "build": {
+    "appId": "com.scrapflow.app",
+    "productName": "ScrapFlow",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "src/main/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
