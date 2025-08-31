@@ -1,25 +1,23 @@
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const path = require('path');
 const { app } = require('electron');
 
-class Database {
+class DatabaseManager {
   constructor() {
     this.db = null;
     this.dbPath = path.join(app.getPath('userData'), 'scrapflow.db');
   }
 
   async init() {
-    return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(this.dbPath, (err) => {
-        if (err) {
-          console.error('데이터베이스 연결 실패:', err);
-          reject(err);
-          return;
-        }
-        console.log('데이터베이스 연결 성공');
-        this.createTables().then(resolve).catch(reject);
-      });
-    });
+    try {
+      this.db = new Database(this.dbPath);
+      console.log('데이터베이스 연결 성공');
+      await this.createTables();
+      return Promise.resolve();
+    } catch (err) {
+      console.error('데이터베이스 연결 실패:', err);
+      return Promise.reject(err);
+    }
   }
 
   async createTables() {
@@ -41,27 +39,14 @@ class Database {
       )
     `;
 
-    return new Promise((resolve, reject) => {
-      this.db.serialize(() => {
-        this.db.run(createScrapsTable, (err) => {
-          if (err) {
-            console.error('scraps 테이블 생성 실패:', err);
-            reject(err);
-            return;
-          }
-        });
-
-        this.db.run(createCategoriesTable, (err) => {
-          if (err) {
-            console.error('categories 테이블 생성 실패:', err);
-            reject(err);
-            return;
-          }
-          
-          this.initDefaultCategories().then(resolve).catch(reject);
-        });
-      });
-    });
+    try {
+      this.db.exec(createScrapsTable);
+      this.db.exec(createCategoriesTable);
+      await this.initDefaultCategories();
+    } catch (err) {
+      console.error('테이블 생성 실패:', err);
+      throw err;
+    }
   }
 
   async initDefaultCategories() {
@@ -121,63 +106,49 @@ class Database {
 
     query += ' ORDER BY created_at DESC';
 
-    return new Promise((resolve, reject) => {
-      this.db.all(query, params, (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(rows);
-      });
-    });
+    try {
+      const stmt = this.db.prepare(query);
+      return stmt.all(params);
+    } catch (err) {
+      throw err;
+    }
   }
 
   async saveScrap(scrapData) {
     const { image_path, comment, category } = scrapData;
     const query = 'INSERT INTO scraps (image_path, comment, category) VALUES (?, ?, ?)';
 
-    return new Promise((resolve, reject) => {
-      this.db.run(query, [image_path, comment, category], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        resolve({ id: this.lastID, ...scrapData });
-      });
-    }).then(result => {
-      this.updateCategoryCount(category);
-      return result;
-    });
+    try {
+      const stmt = this.db.prepare(query);
+      const result = stmt.run([image_path, comment, category]);
+      const returnData = { id: result.lastInsertRowid, ...scrapData };
+      await this.updateCategoryCount(category);
+      return returnData;
+    } catch (err) {
+      throw err;
+    }
   }
 
   async deleteScrap(id) {
     const getScrapQuery = 'SELECT category FROM scraps WHERE id = ?';
     const deleteQuery = 'DELETE FROM scraps WHERE id = ?';
 
-    return new Promise((resolve, reject) => {
-      this.db.get(getScrapQuery, [id], (err, row) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    try {
+      const getStmt = this.db.prepare(getScrapQuery);
+      const row = getStmt.get([id]);
 
-        if (!row) {
-          reject(new Error('스크랩을 찾을 수 없습니다'));
-          return;
-        }
+      if (!row) {
+        throw new Error('스크랩을 찾을 수 없습니다');
+      }
 
-        this.db.run(deleteQuery, [id], (err) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          
-          this.updateCategoryCount(row.category);
-          resolve(true);
-        });
-      });
-    });
+      const deleteStmt = this.db.prepare(deleteQuery);
+      deleteStmt.run([id]);
+      
+      await this.updateCategoryCount(row.category);
+      return true;
+    } catch (err) {
+      throw err;
+    }
   }
 
   async getCategories() {
@@ -194,37 +165,33 @@ class Database {
         c.name
     `;
 
-    return new Promise((resolve, reject) => {
-      this.db.all(query, (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    try {
+      const stmt = this.db.prepare(query);
+      const rows = stmt.all();
 
-        if (rows.length > 0) {
-          rows[0].count = rows.reduce((sum, cat) => 
-            cat.name !== '전체' ? sum + cat.count : sum, 0
-          );
-        }
+      if (rows.length > 0) {
+        rows[0].count = rows.reduce((sum, cat) => 
+          cat.name !== '전체' ? sum + cat.count : sum, 0
+        );
+      }
 
-        resolve(rows);
-      });
-    });
+      return rows;
+    } catch (err) {
+      throw err;
+    }
   }
 
   async saveCategory(category, updateCount = true) {
     const { name, color } = category;
     const query = 'INSERT OR REPLACE INTO categories (name, color) VALUES (?, ?)';
 
-    return new Promise((resolve, reject) => {
-      this.db.run(query, [name, color], function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ name, color });
-      });
-    });
+    try {
+      const stmt = this.db.prepare(query);
+      stmt.run([name, color]);
+      return { name, color };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async updateCategoryCount(categoryName) {
@@ -236,27 +203,24 @@ class Database {
       WHERE name = ?
     `;
 
-    return new Promise((resolve, reject) => {
-      this.db.run(query, [categoryName, categoryName], (err) => {
-        if (err) {
-          console.error('카테고리 카운트 업데이트 실패:', err);
-        }
-        resolve();
-      });
-    });
+    try {
+      const stmt = this.db.prepare(query);
+      stmt.run([categoryName, categoryName]);
+    } catch (err) {
+      console.error('카테고리 카운트 업데이트 실패:', err);
+    }
   }
 
   close() {
     if (this.db) {
-      this.db.close((err) => {
-        if (err) {
-          console.error('데이터베이스 종료 실패:', err);
-        } else {
-          console.log('데이터베이스 연결 종료');
-        }
-      });
+      try {
+        this.db.close();
+        console.log('데이터베이스 연결 종료');
+      } catch (err) {
+        console.error('데이터베이스 종료 실패:', err);
+      }
     }
   }
 }
 
-module.exports = Database;
+module.exports = DatabaseManager;
