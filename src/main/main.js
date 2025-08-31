@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, globalShortcut, Tray, Menu, shell, protocol
 const path = require('path');
 const isDev = require('electron-is-dev');
 const screenshot = require('screenshot-desktop');
-const Database = require('./database');
+const DatabaseManager = require('./database');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs').promises;
 
@@ -11,7 +11,7 @@ class ScrapFlowApp {
     this.mainWindow = null;
     this.commentWindow = null;
     this.tray = null;
-    this.database = new Database();
+    this.database = new DatabaseManager();
     this.setupApp();
   }
 
