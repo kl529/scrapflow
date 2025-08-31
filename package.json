@@ -59,6 +59,14 @@
       "src/main/**/*",
       "node_modules/**/*"
     ],
+    "extraMetadata": {
+      "description": "스크린샷 기반 스크랩북 - 생각을 기록하고 아이디어를 연결하세요"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "kl529",
+      "repo": "scrapflow"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
@@ -66,7 +74,12 @@
           "target": "dmg",
           "arch": ["x64", "arm64"]
         }
-      ]
+      ],
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "target": [
@@ -74,13 +87,36 @@
           "target": "nsis",
           "arch": ["x64", "ia32"]
         }
-      ]
+      ],
+      "publisherName": "ScrapFlow",
+      "verifyUpdateCodeSignature": false
     },
     "linux": {
       "target": [
         {
           "target": "AppImage",
           "arch": ["x64"]
+        }
+      ],
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
         }
       ]
     }

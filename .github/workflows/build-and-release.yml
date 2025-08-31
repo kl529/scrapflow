@@ -1,0 +1,183 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v4
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build React app
+      run: npm run build
+
+    - name: Install native dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: npm rebuild sqlite3
+
+    - name: Install native dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: npm rebuild sqlite3
+
+    - name: Install native dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: npm rebuild sqlite3
+
+    - name: Build Electron app (macOS)
+      if: matrix.os == 'macos-latest'
+      run: npm run build-mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Electron app (Windows)
+      if: matrix.os == 'windows-latest'
+      run: npm run build-win
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Electron app (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: npm run build-linux
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifacts (macOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-build
+        path: dist/*.dmg
+
+    - name: Upload artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build
+        path: dist/*.exe
+
+    - name: Upload artifacts (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-build
+        path: dist/*.AppImage
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Check out Git repository
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Get version
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        release_name: ScrapFlow ${{ steps.version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        body: |
+          ## 🎉 ScrapFlow ${{ steps.version.outputs.VERSION }}
+          
+          ### ✨ Features
+          - 📸 Quick screenshot capture with **Ctrl+Shift+S** (Cmd+Shift+S on Mac)
+          - 💭 Add comments and thoughts to your screenshots
+          - 📂 Organize with custom categories
+          - 🔍 Filter by date and category
+          - 📊 GitHub-style heatmap statistics to track your activity
+          - 🖼️ Full-screen image modal view
+          - ℹ️ Complete usage guide and documentation
+          
+          ### 📦 Downloads
+          Choose the appropriate version for your operating system:
+          
+          - **macOS**: Download the `.dmg` file
+          - **Windows**: Download the `.exe` file  
+          - **Linux**: Download the `.AppImage` file
+          
+          ### 🚀 Installation
+          1. Download the appropriate file for your OS
+          2. Install/run the application
+          3. Grant screen recording permissions when prompted (required for screenshots)
+          4. Start capturing with **Ctrl+Shift+S**!
+          
+          ### 🐛 Bug Reports & Feature Requests
+          Please report issues or request features on our [GitHub Issues](https://github.com/kl529/scrapflow/issues) page.
+          
+          ---
+          
+          **Full Changelog**: https://github.com/kl529/scrapflow/commits/${{ steps.version.outputs.VERSION }}
+
+    - name: Upload macOS Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./macos-build/ScrapFlow-${{ steps.version.outputs.VERSION }}.dmg
+        asset_name: ScrapFlow-${{ steps.version.outputs.VERSION }}-macOS.dmg
+        asset_content_type: application/octet-stream
+      continue-on-error: true
+
+    - name: Upload Windows Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./windows-build/ScrapFlow Setup ${{ steps.version.outputs.VERSION }}.exe
+        asset_name: ScrapFlow-${{ steps.version.outputs.VERSION }}-Windows.exe
+        asset_content_type: application/octet-stream
+      continue-on-error: true
+
+    - name: Upload Linux Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./linux-build/ScrapFlow-${{ steps.version.outputs.VERSION }}.AppImage
+        asset_name: ScrapFlow-${{ steps.version.outputs.VERSION }}-Linux.AppImage
+        asset_content_type: application/octet-stream
+      continue-on-error: true
