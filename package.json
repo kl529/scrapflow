@@ -27,7 +27,6 @@
   "author": "ScrapFlow Team",
   "license": "MIT",
   "dependencies": {
-    "electron": "^26.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.15.0",
@@ -40,6 +39,7 @@
     "sharp": "^0.32.6"
   },
   "devDependencies": {
+    "electron": "^26.0.0",
     "electron-builder": "^24.6.4",
     "concurrently": "^8.2.2",
     "wait-on": "^7.0.1",
