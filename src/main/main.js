@@ -3,6 +3,7 @@ const path = require('path');
 const isDev = require('electron-is-dev');
 const screenshot = require('screenshot-desktop');
 const DatabaseManager = require('./database');
+const OCRService = require('./ocrService');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs').promises;
 
@@ -12,6 +13,7 @@ class ScrapFlowApp {
     this.commentWindow = null;
     this.tray = null;
     this.database = new DatabaseManager();
+    this.ocrService = new OCRService();
     this.setupApp();
   }
 
@@ -22,6 +24,9 @@ class ScrapFlowApp {
       this.setupTray();
       this.registerGlobalShortcuts();
       this.database.init();
+      
+      // OCR 서비스 초기화 시도
+      this.initOCR();
       
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -38,9 +43,19 @@ class ScrapFlowApp {
 
     app.on('will-quit', () => {
       globalShortcut.unregisterAll();
+      this.ocrService.terminate();
     });
 
     this.setupIpcHandlers();
+  }
+
+  async initOCR() {
+    try {
+      await this.ocrService.initialize();
+      console.log('OCR 서비스 초기화 완료');
+    } catch (error) {
+      console.error('OCR 서비스 초기화 실패:', error.message);
+    }
   }
 
   setupProtocol() {
@@ -262,7 +277,29 @@ class ScrapFlowApp {
     });
 
     ipcMain.handle('save-scrap', async (event, scrapData) => {
-      return await this.database.saveScrap(scrapData);
+      try {
+        // OCR 텍스트 추출
+        let ocrText = null;
+        try {
+          ocrText = await this.ocrService.recognizeText(scrapData.image_path);
+        } catch (ocrError) {
+          console.error('OCR 처리 실패:', ocrError.message);
+        }
+        
+        // OCR 결과와 함께 스크랩 저장
+        const scrapWithOcr = { ...scrapData, ocr_text: ocrText };
+        const savedScrap = await this.database.saveScrap(scrapWithOcr);
+        
+        // 메인 윈도우에 스크랩 저장 완료 알림
+        if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+          this.mainWindow.webContents.send('scrap-saved', savedScrap);
+        }
+        
+        return savedScrap;
+      } catch (error) {
+        console.error('스크랩 저장 실패:', error);
+        throw error;
+      }
     });
 
     ipcMain.handle('delete-scrap', async (event, id) => {
@@ -289,6 +326,91 @@ class ScrapFlowApp {
         this.mainWindow.focus();
       }
     });
+
+    ipcMain.handle('process-scraps-ocr', async () => {
+      return await this.processScrapsOCR();
+    });
+
+    ipcMain.handle('get-scraps-without-ocr', async () => {
+      return await this.database.getScrapsWithoutOcr();
+    });
+
+    // 디버깅용 핸들러
+    ipcMain.handle('debug-database', async () => {
+      try {
+        const totalCount = this.database.db.prepare('SELECT COUNT(*) as count FROM scraps').get();
+        const withComment = this.database.db.prepare('SELECT COUNT(*) as count FROM scraps WHERE comment IS NOT NULL AND comment != ""').get();
+        const withOcr = this.database.db.prepare('SELECT COUNT(*) as count FROM scraps WHERE ocr_text IS NOT NULL AND ocr_text != ""').get();
+        const recentScraps = this.database.db.prepare('SELECT id, comment, ocr_text, created_at FROM scraps ORDER BY created_at DESC LIMIT 3').all();
+        
+        return {
+          totalCount: totalCount.count,
+          withComment: withComment.count,
+          withOcr: withOcr.count,
+          recentScraps
+        };
+      } catch (error) {
+        console.error('디버그 데이터베이스 조회 실패:', error);
+        return { error: error.message };
+      }
+    });
+  }
+
+  async processOCRAsync(scrapId, imagePath) {
+    try {
+      console.log(`스크랩 ${scrapId}에 대한 OCR 처리 시작...`);
+      const ocrText = await this.ocrService.recognizeText(imagePath);
+      
+      if (ocrText) {
+        await this.database.updateScrapOcrText(scrapId, ocrText);
+        console.log(`스크랩 ${scrapId} OCR 처리 완료`);
+        
+        // 메인 윈도우가 열려있으면 업데이트 알림
+        if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+          this.mainWindow.webContents.send('scrap-ocr-updated', { scrapId, ocrText });
+        }
+      }
+    } catch (error) {
+      console.error(`스크랩 ${scrapId} OCR 처리 실패:`, error);
+    }
+  }
+
+  async processScrapsOCR() {
+    try {
+      const scrapsWithoutOcr = await this.database.getScrapsWithoutOcr();
+      console.log(`OCR 처리가 필요한 스크랩 ${scrapsWithoutOcr.length}개 발견`);
+      
+      let processedCount = 0;
+      const totalCount = scrapsWithoutOcr.length;
+      
+      for (const scrap of scrapsWithoutOcr) {
+        try {
+          const ocrText = await this.ocrService.recognizeText(scrap.image_path);
+          if (ocrText) {
+            await this.database.updateScrapOcrText(scrap.id, ocrText);
+          }
+          processedCount++;
+          
+          // 진행률을 메인 윈도우에 전송
+          if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+            this.mainWindow.webContents.send('ocr-migration-progress', {
+              processed: processedCount,
+              total: totalCount,
+              current: scrap.id
+            });
+          }
+        } catch (error) {
+          console.error(`스크랩 ${scrap.id} OCR 처리 실패:`, error);
+          processedCount++;
+        }
+      }
+      
+      console.log(`OCR 마이그레이션 완료: ${processedCount}/${totalCount}`);
+      return { processed: processedCount, total: totalCount };
+    } catch (error) {
+      console.error('OCR 마이그레이션 실패:', error);
+      throw error;
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ScrapGrid from './ScrapGrid';
 import DateFilter from './DateFilter';
+import SearchBar from './SearchBar';
 import ScrapModal from './ScrapModal';
 
 const MainWindow = () => {
@@ -10,16 +11,41 @@ const MainWindow = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [dateFilter, setDateFilter] = useState('all');
+  const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedScrap, setSelectedScrap] = useState(null);
 
   useEffect(() => {
     loadData();
+    
+    // 윈도우 포커스 시 데이터 새로고침
+    const handleFocus = () => {
+      loadData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    // 스크랩 저장 완료 이벤트 리스너
+    const handleScrapSaved = () => {
+      loadData(); // 카테고리 개수와 전체 목록 새로고침
+    };
+    
+    // IPC 이벤트 리스너 (나중에 구현 예정)
+    if (window.electronAPI && window.electronAPI.onScrapSaved) {
+      window.electronAPI.onScrapSaved(handleScrapSaved);
+    }
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      if (window.electronAPI && window.electronAPI.removeAllListeners) {
+        window.electronAPI.removeAllListeners('scrap-saved');
+      }
+    };
   }, []);
 
   useEffect(() => {
     loadScraps();
-  }, [selectedCategory, dateFilter]);
+  }, [selectedCategory, dateFilter, searchText]);
 
   const loadData = async () => {
     try {
@@ -41,7 +67,8 @@ const MainWindow = () => {
     try {
       const filters = {
         category: selectedCategory,
-        dateFilter: dateFilter !== 'all' ? dateFilter : null
+        dateFilter: dateFilter !== 'all' ? dateFilter : null,
+        searchText: searchText || null
       };
       
       const scrapsData = await window.electronAPI.getScraps(filters);
@@ -78,6 +105,10 @@ const MainWindow = () => {
     setSelectedScrap(null);
   };
 
+  const handleSearch = (text) => {
+    setSearchText(text);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -97,7 +128,7 @@ const MainWindow = () => {
       
       <div className="flex-1 flex flex-col">
         <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">
               📚 ScrapFlow
             </h1>
@@ -127,6 +158,15 @@ const MainWindow = () => {
                 onFilterChange={setDateFilter}
               />
             </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <SearchBar onSearch={handleSearch} />
+            {searchText && (
+              <div className="text-sm text-gray-500">
+                "{searchText}" 검색 중
+              </div>
+            )}
           </div>
         </div>
         

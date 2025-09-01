@@ -8,6 +8,7 @@ const CommentWindow = () => {
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [ocrProcessing, setOcrProcessing] = useState(false);
 
   useEffect(() => {
     const handleScreenshotCaptured = (path) => {
@@ -35,6 +36,7 @@ const CommentWindow = () => {
 
   const handleCategorySelected = async (category) => {
     setSaving(true);
+    setOcrProcessing(true);
     
     try {
       const scrapData = {
@@ -43,8 +45,12 @@ const CommentWindow = () => {
         category: category
       };
 
+      // OCR 처리 포함한 저장 (시간이 걸릴 수 있음)
+      toast.loading('이미지 텍스트를 추출하는 중...', { id: 'saving' });
+      
       await window.electronAPI.saveScrap(scrapData);
-      toast.success('스크랩이 저장되었습니다!');
+      
+      toast.success('스크랩이 저장되었습니다!', { id: 'saving' });
       
       setTimeout(() => {
         window.electronAPI.closeCommentWindow();
@@ -53,8 +59,9 @@ const CommentWindow = () => {
       
     } catch (error) {
       console.error('스크랩 저장 실패:', error);
-      toast.error('저장에 실패했습니다');
+      toast.error('저장에 실패했습니다', { id: 'saving' });
       setSaving(false);
+      setOcrProcessing(false);
       setShowCategorySelector(false);
     }
   };
@@ -117,7 +124,7 @@ const CommentWindow = () => {
             className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
             disabled={!imagePath || saving}
           >
-            {saving ? '저장 중...' : '저장'}
+            {saving ? (ocrProcessing ? 'OCR 처리 중...' : '저장 중...') : '저장'}
           </button>
         </div>
       </div>

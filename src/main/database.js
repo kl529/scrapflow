@@ -27,6 +27,7 @@ class DatabaseManager {
         image_path TEXT NOT NULL,
         comment TEXT,
         category TEXT NOT NULL,
+        ocr_text TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -42,10 +43,26 @@ class DatabaseManager {
     try {
       this.db.exec(createScrapsTable);
       this.db.exec(createCategoriesTable);
+      await this.migrateDatabase();
       await this.initDefaultCategories();
     } catch (err) {
       console.error('테이블 생성 실패:', err);
       throw err;
+    }
+  }
+
+  async migrateDatabase() {
+    // 기존 테이블에 ocr_text 컬럼이 없으면 추가
+    try {
+      const tableInfo = this.db.prepare("PRAGMA table_info(scraps)").all();
+      const hasOcrText = tableInfo.some(column => column.name === 'ocr_text');
+      
+      if (!hasOcrText) {
+        this.db.exec('ALTER TABLE scraps ADD COLUMN ocr_text TEXT');
+        console.log('OCR 텍스트 컬럼 추가 완료');
+      }
+    } catch (err) {
+      console.error('데이터베이스 마이그레이션 실패:', err);
     }
   }
 
@@ -65,7 +82,7 @@ class DatabaseManager {
   }
 
   async getScraps(filters = {}) {
-    const { category, dateFilter } = filters;
+    const { category, dateFilter, searchText } = filters;
     let query = 'SELECT * FROM scraps';
     const params = [];
 
@@ -74,6 +91,13 @@ class DatabaseManager {
     if (category && category !== '전체') {
       conditions.push('category = ?');
       params.push(category);
+    }
+
+    if (searchText && searchText.trim() !== '') {
+      // NULL 값을 명시적으로 처리하는 검색 조건
+      conditions.push('((comment IS NOT NULL AND comment LIKE ? COLLATE NOCASE) OR (ocr_text IS NOT NULL AND ocr_text LIKE ? COLLATE NOCASE))');
+      const searchPattern = `%${searchText}%`;
+      params.push(searchPattern, searchPattern);
     }
 
     if (dateFilter) {
@@ -108,19 +132,21 @@ class DatabaseManager {
 
     try {
       const stmt = this.db.prepare(query);
-      return stmt.all(params);
+      const results = stmt.all(params);
+      return results;
     } catch (err) {
+      console.error('[데이터베이스] 쿼리 실행 오류:', err);
       throw err;
     }
   }
 
   async saveScrap(scrapData) {
-    const { image_path, comment, category } = scrapData;
-    const query = 'INSERT INTO scraps (image_path, comment, category) VALUES (?, ?, ?)';
+    const { image_path, comment, category, ocr_text = null } = scrapData;
+    const query = 'INSERT INTO scraps (image_path, comment, category, ocr_text) VALUES (?, ?, ?, ?)';
 
     try {
       const stmt = this.db.prepare(query);
-      const result = stmt.run([image_path, comment, category]);
+      const result = stmt.run([image_path, comment, category, ocr_text]);
       const returnData = { id: result.lastInsertRowid, ...scrapData };
       await this.updateCategoryCount(category);
       return returnData;
@@ -208,6 +234,30 @@ class DatabaseManager {
       stmt.run([categoryName, categoryName]);
     } catch (err) {
       console.error('카테고리 카운트 업데이트 실패:', err);
+    }
+  }
+
+  async updateScrapOcrText(id, ocrText) {
+    const query = 'UPDATE scraps SET ocr_text = ? WHERE id = ?';
+    
+    try {
+      const stmt = this.db.prepare(query);
+      stmt.run([ocrText, id]);
+      return true;
+    } catch (err) {
+      console.error('OCR 텍스트 업데이트 실패:', err);
+      throw err;
+    }
+  }
+
+  async getScrapsWithoutOcr() {
+    const query = 'SELECT * FROM scraps WHERE ocr_text IS NULL ORDER BY created_at DESC';
+    
+    try {
+      const stmt = this.db.prepare(query);
+      return stmt.all();
+    } catch (err) {
+      throw err;
     }
   }
 

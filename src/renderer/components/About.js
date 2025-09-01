@@ -1,7 +1,76 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const About = () => {
+  const [scrapsWithoutOcr, setScrapsWithoutOcr] = useState([]);
+  const [allScraps, setAllScraps] = useState([]);
+  const [ocrProgress, setOcrProgress] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    loadScrapsWithoutOcr();
+    loadAllScraps();
+    
+    // OCR 진행률 이벤트 리스너
+    const handleOcrProgress = (event, data) => {
+      setOcrProgress(data);
+      if (data.processed === data.total) {
+        setIsProcessing(false);
+        loadScrapsWithoutOcr(); // 완료되면 다시 로드
+        loadAllScraps(); // 전체 스크랩도 다시 로드
+      }
+    };
+
+    window.electronAPI.onOcrMigrationProgress?.(handleOcrProgress);
+
+    return () => {
+      // 클린업은 필요시 추가
+    };
+  }, []);
+
+  const loadScrapsWithoutOcr = async () => {
+    try {
+      if (!window.electronAPI || !window.electronAPI.getScrapsWithoutOcr) {
+        console.error('electronAPI.getScrapsWithoutOcr가 정의되지 않음');
+        return;
+      }
+      const scraps = await window.electronAPI.getScrapsWithoutOcr();
+      console.log('OCR 없는 스크랩:', scraps.length, '개');
+      setScrapsWithoutOcr(scraps);
+    } catch (error) {
+      console.error('OCR 없는 스크랩 로드 실패:', error);
+    }
+  };
+
+  const loadAllScraps = async () => {
+    try {
+      if (!window.electronAPI || !window.electronAPI.getScraps) {
+        console.error('electronAPI.getScraps가 정의되지 않음');
+        return;
+      }
+      const scraps = await window.electronAPI.getScraps();
+      setAllScraps(scraps);
+    } catch (error) {
+      console.error('전체 스크랩 로드 실패:', error);
+    }
+  };
+
+  const handleProcessOCR = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    setOcrProgress({ processed: 0, total: scrapsWithoutOcr.length });
+    
+    try {
+      const result = await window.electronAPI.processScrapsOcr();
+      console.log('OCR 처리 완료:', result);
+    } catch (error) {
+      console.error('OCR 처리 실패:', error);
+      setIsProcessing(false);
+      setOcrProgress(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 헤더 */}
@@ -69,8 +138,13 @@ const About = () => {
             />
             <FeatureCard
               icon="🔍"
-              title="필터링 & 검색"
-              description="날짜별, 카테고리별로 스크랩을 필터링하여 원하는 정보를 빠르게 찾을 수 있습니다."
+              title="스마트 검색"
+              description="코멘트와 OCR로 추출된 텍스트에서 실시간 검색이 가능하며, 대소문자를 구분하지 않습니다."
+            />
+            <FeatureCard
+              icon="🤖"
+              title="자동 OCR 텍스트 추출"
+              description="Tesseract.js 6.x를 사용하여 영어와 한국어 텍스트를 자동으로 인식하고 추출합니다."
             />
             <FeatureCard
               icon="📊"
@@ -79,8 +153,18 @@ const About = () => {
             />
             <FeatureCard
               icon="🖼️"
-              title="이미지 확대 보기"
-              description="스크랩을 클릭하면 큰 화면으로 이미지와 코멘트를 자세히 볼 수 있습니다."
+              title="스크랩 상세 보기"
+              description="스크랩을 클릭하면 큰 화면으로 이미지, 코멘트, OCR 텍스트를 자세히 볼 수 있습니다."
+            />
+            <FeatureCard
+              icon="📅"
+              title="날짜별 필터링"
+              description="오늘, 이번 주, 이번 달로 스크랩을 필터링하여 원하는 기간의 자료를 쉽게 찾을 수 있습니다."
+            />
+            <FeatureCard
+              icon="⚡"
+              title="실시간 업데이트"
+              description="스크랩 추가/삭제 시 카테고리 개수와 목록이 즉시 업데이트되어 항상 최신 상태를 유지합니다."
             />
           </div>
         </div>
@@ -110,8 +194,13 @@ const About = () => {
             />
             <UsageStep
               number="4"
-              title="스크랩 관리하기"
-              description="메인 화면에서 저장된 스크랩들을 확인하고, 클릭하여 자세히 보거나 필요없는 것은 삭제할 수 있습니다."
+              title="스크랩 검색하기"
+              description="상단 검색창에서 코멘트나 OCR로 추출된 텍스트를 실시간으로 검색할 수 있습니다. 카테고리나 날짜 필터와 함께 사용하면 더욱 정확한 결과를 얻을 수 있습니다."
+            />
+            <UsageStep
+              number="5"
+              title="스크랩 상세 보기"
+              description="스크랩을 클릭하면 상세 모달이 열리며, 큰 이미지와 코멘트를 확인할 수 있습니다. OCR 텍스트가 있는 경우 '문자인식' 버튼을 클릭하여 추출된 텍스트를 볼 수 있습니다."
             />
           </div>
         </div>
@@ -135,6 +224,118 @@ const About = () => {
             />
           </div>
         </div>
+
+        {/* OCR 상태 및 마이그레이션 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <span className="mr-3">🔍</span>
+            OCR 텍스트 추출
+          </h3>
+          
+          {/* 디버깅 정보 */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-800 mb-3">📊 OCR 상태</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="bg-white p-3 rounded border">
+                <div className="font-medium text-gray-900">전체 스크랩</div>
+                <div className="text-2xl font-bold text-blue-600">{allScraps.length}</div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-medium text-gray-900">OCR 완료</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {allScraps.length - scrapsWithoutOcr.length}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-medium text-gray-900">OCR 대기</div>
+                <div className="text-2xl font-bold text-orange-600">{scrapsWithoutOcr.length}</div>
+              </div>
+            </div>
+            
+            {/* 샘플 데이터 표시 */}
+            {allScraps.length > 0 && (
+              <div className="mt-4">
+                <h5 className="font-medium text-gray-700 mb-2">🔍 검색 테스트용 데이터 샘플</h5>
+                <div className="max-h-32 overflow-y-auto bg-white p-2 rounded border text-xs">
+                  {allScraps.slice(0, 3).map((scrap, index) => (
+                    <div key={scrap.id} className="mb-2 p-2 border-b border-gray-100 last:border-b-0">
+                      <div><strong>스크랩 {scrap.id}:</strong></div>
+                      <div>코멘트: "{scrap.comment || '(없음)'}"</div>
+                      <div>OCR: "{scrap.ocr_text ? scrap.ocr_text.substring(0, 100) + '...' : '(없음)'}"</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mb-6">
+            {scrapsWithoutOcr.length > 0 ? (
+              <p className="text-gray-700 mb-4">
+                기존 스크랩 <strong>{scrapsWithoutOcr.length}개</strong>에 OCR 텍스트 추출이 필요합니다. 
+                텍스트 추출을 완료하면 이미지 속 텍스트로도 검색할 수 있게 됩니다.
+              </p>
+            ) : (
+              <p className="text-green-700 mb-4">
+                ✅ 모든 스크랩에 OCR 텍스트 추출이 완료되었습니다!
+                <br />
+                <span className="text-gray-600 text-sm">새로운 스크린샷은 자동으로 OCR 처리됩니다.</span>
+              </p>
+            )}
+              
+              {isProcessing && ocrProgress && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">
+                      처리 중... ({ocrProgress.processed}/{ocrProgress.total})
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {Math.round((ocrProgress.processed / ocrProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(ocrProgress.processed / ocrProgress.total) * 100}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+              
+              {scrapsWithoutOcr.length > 0 && (
+                <button
+                  onClick={handleProcessOCR}
+                  disabled={isProcessing}
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                    isProcessing
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  {isProcessing ? '처리 중...' : 'OCR 텍스트 추출 시작'}
+                </button>
+              )}
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h4 className="font-medium text-yellow-800 mb-1">주의사항</h4>
+                  <ul className="text-sm text-yellow-700 space-y-1">
+                    <li>• OCR 처리에는 시간이 걸릴 수 있습니다</li>
+                    <li>• 처리 중에는 앱을 종료하지 마세요</li>
+                    <li>• 한국어와 영어 텍스트를 인식합니다</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 저장 위치 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
