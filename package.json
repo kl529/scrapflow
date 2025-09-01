@@ -38,6 +38,7 @@
     "react-router-dom": "^6.15.0",
     "screenshot-desktop": "^1.15.0",
     "sharp": "^0.32.6",
+    "tesseract.js": "^6.0.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -81,10 +82,9 @@
         }
       ],
       "darkModeSupport": true,
-      "hardenedRuntime": true,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "identity": null
     },
     "win": {
       "target": [

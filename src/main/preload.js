@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCategories: () => ipcRenderer.invoke('get-categories'),
   saveCategory: (category) => ipcRenderer.invoke('save-category', category),
   
+  // OCR 관련
+  processScrapsOcr: () => ipcRenderer.invoke('process-scraps-ocr'),
+  getScrapsWithoutOcr: () => ipcRenderer.invoke('get-scraps-without-ocr'),
+  
   // 윈도우 관련
   closeCommentWindow: () => ipcRenderer.invoke('close-comment-window'),
   showMainWindow: () => ipcRenderer.invoke('show-main-window'),
@@ -21,6 +25,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     });
   },
   
+  onOcrMigrationProgress: (callback) => {
+    ipcRenderer.on('ocr-migration-progress', (event, data) => {
+      callback(event, data);
+    });
+  },
+  
+  onScrapSaved: (callback) => {
+    ipcRenderer.on('scrap-saved', (event, scrapData) => {
+      callback(scrapData);
+    });
+  },
+  
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);
   },
@@ -28,5 +44,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 로컬 파일 경로를 안전한 URL로 변환
   getImageUrl: (filePath) => {
     return `scrapflow://${encodeURIComponent(filePath)}`;
-  }
+  },
+
+  // 디버깅용
+  debugDatabase: () => ipcRenderer.invoke('debug-database')
 });
