@@ -5,6 +5,7 @@ import { ko } from 'date-fns/locale';
 const ScrapModal = ({ scrap, onClose }) => {
   const [imageError, setImageError] = useState(false);
   const [showOcrText, setShowOcrText] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -50,6 +51,48 @@ const ScrapModal = ({ scrap, onClose }) => {
     return colorMap[category] || '#6B7280';
   };
 
+  const handleExportScrap = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    
+    try {
+      // SNS 공유 이미지 생성
+      const shareResult = await window.electronAPI.exportScrap(scrap);
+      
+      if (shareResult.success) {
+        // 저장 대화상자 표시
+        const result = await window.electronAPI.showSaveDialog({
+          title: 'SNS 공유 이미지 저장',
+          defaultPath: `scrapflow_share_${scrap.id}_${new Date().getTime()}.png`,
+          filters: [
+            { name: 'PNG 이미지', extensions: ['png'] },
+            { name: '모든 파일', extensions: ['*'] }
+          ]
+        });
+
+        if (!result.canceled && result.filePath) {
+          // 생성된 공유 이미지를 사용자가 선택한 위치에 복사
+          const shareImageData = await window.electronAPI.readFile(shareResult.imagePath);
+          await window.electronAPI.writeFile(result.filePath, shareImageData);
+          
+          // 성공 알림
+          alert('SNS 공유 이미지가 성공적으로 생성되었습니다!\n\n이미지를 SNS에 업로드하여 공유해보세요.');
+          
+          // 저장된 파일을 Finder에서 보여주기 (macOS)
+          if (window.electronAPI.showItemInFolder) {
+            window.electronAPI.showItemInFolder(result.filePath);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('SNS 공유 이미지 생성 실패:', error);
+      alert('SNS 공유 이미지 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!scrap) return null;
 
   return (
@@ -68,6 +111,29 @@ const ScrapModal = ({ scrap, onClose }) => {
             <span className="font-medium text-gray-900">{scrap.category}</span>
           </div>
           <div className="flex items-center space-x-2">
+            {/* 공유 버튼 */}
+            <button
+              onClick={handleExportScrap}
+              disabled={isExporting}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 ${
+                isExporting
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              }`}
+            >
+              {isExporting ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              )}
+              <span>{isExporting ? 'SNS 이미지 생성중...' : 'SNS 공유'}</span>
+            </button>
+            
             {/* OCR 텍스트 보기 버튼 */}
             {scrap.ocr_text && (
               <button
@@ -85,6 +151,7 @@ const ScrapModal = ({ scrap, onClose }) => {
                 <span>문자인식</span>
               </button>
             )}
+            
             <button
               onClick={onClose}
               className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"

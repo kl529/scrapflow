@@ -14,6 +14,7 @@ const MainWindow = () => {
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedScrap, setSelectedScrap] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -109,6 +110,44 @@ const MainWindow = () => {
     setSearchText(text);
   };
 
+  const handleImportScrap = async () => {
+    if (isImporting) return;
+    
+    setIsImporting(true);
+    
+    try {
+      // 파일 열기 대화상자 표시
+      const result = await window.electronAPI.showOpenDialog({
+        title: '스크랩 임포트',
+        filters: [
+          { name: 'ScrapFlow 파일', extensions: ['scrap'] },
+          { name: 'JSON 파일', extensions: ['json'] },
+          { name: '모든 파일', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+      });
+
+      if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
+        // 파일 읽기
+        const fileContent = await window.electronAPI.readFile(result.filePaths[0]);
+        const importData = JSON.parse(fileContent);
+        
+        // 스크랩 임포트
+        const importedScrap = await window.electronAPI.importScrap(importData);
+        
+        // 데이터 새로고침
+        await loadData();
+        
+        alert('스크랩이 성공적으로 임포트되었습니다!');
+      }
+    } catch (error) {
+      console.error('스크랩 임포트 실패:', error);
+      alert('스크랩 임포트 중 오류가 발생했습니다. 파일 형식을 확인해주세요.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -134,6 +173,29 @@ const MainWindow = () => {
             </h1>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
+                {/* 스크랩 임포트 버튼 */}
+                <button
+                  onClick={handleImportScrap}
+                  disabled={isImporting}
+                  className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isImporting
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+                  }`}
+                >
+                  {isImporting ? (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                  )}
+                  <span>{isImporting ? '임포트중...' : '스크랩 가져오기'}</span>
+                </button>
+                
                 <Link
                   to="/statistics"
                   className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
