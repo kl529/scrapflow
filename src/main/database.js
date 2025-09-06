@@ -261,6 +261,87 @@ class DatabaseManager {
     }
   }
 
+  async exportScrap(id) {
+    const query = 'SELECT * FROM scraps WHERE id = ?';
+    
+    try {
+      const stmt = this.db.prepare(query);
+      const scrap = stmt.get([id]);
+      
+      if (!scrap) {
+        throw new Error('스크랩을 찾을 수 없습니다');
+      }
+
+      // 이미지 파일을 Base64로 인코딩
+      const fs = require('fs');
+      let imageData = null;
+      
+      if (fs.existsSync(scrap.image_path)) {
+        const imageBuffer = fs.readFileSync(scrap.image_path);
+        const fileExtension = path.extname(scrap.image_path);
+        imageData = {
+          data: imageBuffer.toString('base64'),
+          extension: fileExtension
+        };
+      }
+
+      return {
+        scrap: {
+          comment: scrap.comment,
+          category: scrap.category,
+          ocr_text: scrap.ocr_text,
+          created_at: scrap.created_at
+        },
+        image: imageData,
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async importScrap(exportData) {
+    const fs = require('fs');
+    const crypto = require('crypto');
+    const { app } = require('electron');
+
+    try {
+      let imagePath = null;
+
+      // 이미지 데이터가 있으면 파일로 저장
+      if (exportData.image) {
+        const imagesDir = path.join(app.getPath('userData'), 'scrapflow_images');
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+        }
+
+        // 고유한 파일명 생성
+        const timestamp = new Date().getTime();
+        const randomId = crypto.randomBytes(8).toString('hex');
+        const fileName = `imported_${timestamp}_${randomId}${exportData.image.extension}`;
+        imagePath = path.join(imagesDir, fileName);
+
+        // Base64 데이터를 파일로 저장
+        const imageBuffer = Buffer.from(exportData.image.data, 'base64');
+        fs.writeFileSync(imagePath, imageBuffer);
+      }
+
+      // 스크랩 데이터를 데이터베이스에 저장
+      const scrapData = {
+        image_path: imagePath,
+        comment: exportData.scrap.comment,
+        category: exportData.scrap.category,
+        ocr_text: exportData.scrap.ocr_text
+      };
+
+      const savedScrap = await this.saveScrap(scrapData);
+      return savedScrap;
+    } catch (err) {
+      throw err;
+    }
+  }
+
   close() {
     if (this.db) {
       try {

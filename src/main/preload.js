@@ -46,6 +46,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return `scrapflow://${encodeURIComponent(filePath)}`;
   },
 
+  // 파일 관련
+  exportScrap: (scrapData) => ipcRenderer.invoke('export-scrap', scrapData),
+  showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
+  writeFile: (filePath, data) => ipcRenderer.invoke('write-file', filePath, data),
+  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
+  showItemInFolder: (filePath) => ipcRenderer.invoke('show-item-in-folder', filePath),
+
   // 디버깅용
   debugDatabase: () => ipcRenderer.invoke('debug-database')
 });

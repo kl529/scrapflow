@@ -6,6 +6,7 @@ const DatabaseManager = require('./database');
 const OCRService = require('./ocrService');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs').promises;
+// Canvas 대신 Electron 내장 기능 사용
 
 class ScrapFlowApp {
   constructor() {
@@ -335,6 +336,42 @@ class ScrapFlowApp {
       return await this.database.getScrapsWithoutOcr();
     });
 
+    ipcMain.handle('export-scrap', async (event, scrapData) => {
+      return await this.createShareImage(scrapData);
+    });
+
+    ipcMain.handle('import-scrap', async (event, exportData) => {
+      return await this.database.importScrap(exportData);
+    });
+
+    ipcMain.handle('show-save-dialog', async (event, options) => {
+      const { dialog } = require('electron');
+      const result = await dialog.showSaveDialog(this.mainWindow, options);
+      return result;
+    });
+
+    ipcMain.handle('show-open-dialog', async (event, options) => {
+      const { dialog } = require('electron');
+      const result = await dialog.showOpenDialog(this.mainWindow, options);
+      return result;
+    });
+
+    ipcMain.handle('write-file', async (event, filePath, data) => {
+      const fs = require('fs').promises;
+      await fs.writeFile(filePath, data);
+      return true;
+    });
+
+    ipcMain.handle('read-file', async (event, filePath) => {
+      const fs = require('fs').promises;
+      const data = await fs.readFile(filePath);
+      return data;
+    });
+
+    ipcMain.handle('show-item-in-folder', async (event, filePath) => {
+      shell.showItemInFolder(filePath);
+    });
+
     // 디버깅용 핸들러
     ipcMain.handle('debug-database', async () => {
       try {
@@ -409,6 +446,188 @@ class ScrapFlowApp {
       return { processed: processedCount, total: totalCount };
     } catch (error) {
       console.error('OCR 마이그레이션 실패:', error);
+      throw error;
+    }
+  }
+
+  async createShareImage(scrapData) {
+    try {
+      const { format } = require('date-fns');
+      const { ko } = require('date-fns/locale');
+      
+      // 날짜 포맷팅
+      const formatDate = (dateString) => {
+        try {
+          return format(new Date(dateString), 'yyyy.MM.dd HH:mm', { locale: ko });
+        } catch (error) {
+          return '날짜 오류';
+        }
+      };
+      
+      // 카테고리 색상
+      const getCategoryColor = (category) => {
+        const colorMap = {
+          '전체': '#6B7280',
+          '개발': '#3B82F6', 
+          '디자인': '#F59E0B',
+          '비즈니스': '#10B981'
+        };
+        return colorMap[category] || '#6B7280';
+      };
+      
+      const categoryColor = getCategoryColor(scrapData.category);
+      const formattedDate = formatDate(scrapData.created_at);
+      const comment = scrapData.comment || '스크랩한 내용입니다';
+      const truncatedComment = comment.length > 200 ? comment.substring(0, 197) + '...' : comment;
+      
+      // 숨겨진 윈도우 생성 (스크린샷 캡처용)
+      const shareWindow = new BrowserWindow({
+        width: 800,
+        height: 1200, // 높이를 늘려서 긴 이미지도 수용
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+        }
+      });
+      
+      // Base64 이미지 생성
+      const imageBuffer = await fs.readFile(scrapData.image_path);
+      const base64Image = imageBuffer.toString('base64');
+      const imageMimeType = scrapData.image_path.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      
+      // HTML 템플릿 생성
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background: white;
+              width: 760px;
+              min-height: 100vh;
+              display: flex;
+              align-items: flex-start;
+              justify-content: center;
+            }
+            .share-card {
+              width: 100%;
+              max-width: 600px;
+              margin: 20px auto;
+              background: white;
+              border: 1px solid #E5E7EB;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            .header {
+              background: #F9FAFB;
+              padding: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .category-badge {
+              background: ${categoryColor};
+              color: white;
+              padding: 6px 16px;
+              border-radius: 14px;
+              font-weight: 500;
+              font-size: 14px;
+            }
+            .brand {
+              color: #6B7280;
+              font-weight: 500;
+              font-size: 14px;
+            }
+            .image-container {
+              padding: 20px;
+              text-align: center;
+            }
+            .screenshot {
+              max-width: 100%;
+              width: auto;
+              height: auto;
+              border-radius: 8px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+              display: block;
+              margin: 0 auto;
+            }
+            .content {
+              padding: 20px;
+              border-top: 1px solid #F3F4F6;
+            }
+            .comment {
+              color: #4B5563;
+              font-size: 14px;
+              line-height: 1.6;
+              margin-bottom: 16px;
+              word-wrap: break-word;
+              white-space: pre-wrap;
+              text-align: left;
+            }
+            .footer {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              color: #9CA3AF;
+              font-size: 12px;
+            }
+            .date {
+              color: #9CA3AF;
+            }
+            .by-scrapflow {
+              color: #9CA3AF;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="share-card">
+            <div class="header">
+              <div class="category-badge">${scrapData.category}</div>
+              <div class="brand">ScrapFlow</div>
+            </div>
+            <div class="image-container">
+              <img class="screenshot" src="data:${imageMimeType};base64,${base64Image}" alt="스크랩 이미지" />
+            </div>
+            <div class="content">
+              <div class="comment">${truncatedComment}</div>
+              <div class="footer">
+                <div class="date">${formattedDate}</div>
+                <div class="by-scrapflow">by ScrapFlow</div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // HTML 로드
+      await shareWindow.loadURL('data:text/html;charset=UTF-8,' + encodeURIComponent(htmlContent));
+      
+      // 렌더링 완료 대기 (이미지 로딩 시간 고려)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // 스크린샷 캡처
+      const screenshot = await shareWindow.webContents.capturePage();
+      
+      // 임시 파일 저장
+      const tempDir = path.join(app.getPath('userData'), 'temp');
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      const shareImagePath = path.join(tempDir, `share_${Date.now()}.png`);
+      await fs.writeFile(shareImagePath, screenshot.toPNG());
+      
+      // 윈도우 정리
+      shareWindow.close();
+      
+      return { success: true, imagePath: shareImagePath };
+      
+    } catch (error) {
+      console.error('공유 이미지 생성 실패:', error);
       throw error;
     }
   }

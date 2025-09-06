@@ -49,10 +49,16 @@ class OCRService {
       console.log(`OCR 인식 완료 - 신뢰도: ${Math.round(confidence)}%`);
       console.log(`인식된 텍스트 (${text.length}자):`, text.substring(0, 100) + (text.length > 100 ? '...' : ''));
       
-      // 텍스트 정리: 불필요한 공백과 줄바꿈 정리
+      // 텍스트 정리: 한국어 띄어쓰기를 고려한 정리
       const cleanedText = text
-        .replace(/\s+/g, ' ')  // 연속된 공백을 하나로
-        .replace(/\n+/g, '\n') // 연속된 줄바꿈을 하나로
+        // 한글 사이의 불필요한 공백 제거 (한글-공백-한글 패턴)
+        .replace(/([가-힣])\s+([가-힣])/g, '$1$2')
+        // 영문, 숫자 사이의 연속된 공백은 하나로
+        .replace(/([a-zA-Z0-9])\s+([a-zA-Z0-9])/g, '$1 $2')
+        // 연속된 줄바꿈을 하나로
+        .replace(/\n+/g, '\n')
+        // 줄 시작/끝 공백 제거
+        .replace(/^\s+|\s+$/gm, '')
         .trim();
 
       if (cleanedText.length === 0) {

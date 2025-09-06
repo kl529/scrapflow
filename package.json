@@ -37,7 +37,6 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.15.0",
     "screenshot-desktop": "^1.15.0",
-    "sharp": "^0.32.6",
     "tesseract.js": "^6.0.1",
     "uuid": "^9.0.0"
   },
