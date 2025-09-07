@@ -71,6 +71,7 @@ class ScrapFlowApp {
     this.mainWindow = new BrowserWindow({
       width: 1200,
       height: 800,
+      icon: path.join(__dirname, '../../logo.png'),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -95,7 +96,7 @@ class ScrapFlowApp {
   }
 
   setupTray() {
-    const iconPath = path.join(__dirname, '../assets/tray-icon.png');
+    const iconPath = path.join(__dirname, '../../logo.png');
     
     // 아이콘 파일이 없으면 기본 아이콘 사용하거나 건너뛰기
     try {
@@ -161,9 +162,164 @@ class ScrapFlowApp {
     console.log('등록된 단축키:', globalShortcut.isRegistered('CommandOrControl+Shift+S'));
   }
 
+  async getCurrentBrowserUrl() {
+    try {
+      const { exec } = require('child_process');
+      const { promisify } = require('util');
+      const execAsync = promisify(exec);
+      
+      // 먼저 현재 활성 애플리케이션이 브라우저인지 확인
+      let frontmostApp = null;
+      try {
+        const { stdout } = await execAsync(`osascript -e 'tell application "System Events" to set frontApp to name of first application process whose frontmost is true'`);
+        frontmostApp = stdout.trim();
+        console.log(`현재 활성 앱: ${frontmostApp}`);
+      } catch (error) {
+        console.log('활성 앱 확인 실패:', error.message);
+      }
+      
+      // 브라우저별 URL 가져오기 스크립트 (더 안전한 방식)
+      const browserScripts = [
+        {
+          name: 'Google Chrome',
+          processName: 'Google Chrome',
+          script: `tell application "Google Chrome"
+            if it is running then
+              try
+                if (count of windows) > 0 then
+                  if visible of front window then
+                    return URL of active tab of front window
+                  end if
+                end if
+              end try
+            end if
+            return ""
+          end tell`
+        },
+        {
+          name: 'Safari',
+          processName: 'Safari',
+          script: `tell application "Safari"
+            if it is running then
+              try
+                if (count of windows) > 0 then
+                  if visible of front window then
+                    return URL of front document
+                  end if
+                end if
+              end try
+            end if
+            return ""
+          end tell`
+        },
+        {
+          name: 'Arc',
+          processName: 'Arc',
+          script: `tell application "Arc"
+            if it is running then
+              try
+                if (count of windows) > 0 then
+                  if visible of front window then
+                    return URL of active tab of front window
+                  end if
+                end if
+              end try
+            end if
+            return ""
+          end tell`
+        },
+        {
+          name: 'Microsoft Edge',
+          processName: 'Microsoft Edge',
+          script: `tell application "Microsoft Edge"
+            if it is running then
+              try
+                if (count of windows) > 0 then
+                  if visible of front window then
+                    return URL of active tab of front window
+                  end if
+                end if
+              end try
+            end if
+            return ""
+          end tell`
+        },
+        {
+          name: 'Whale',
+          processName: 'Whale',
+          script: `tell application "Whale"
+            if it is running then
+              try
+                if (count of windows) > 0 then
+                  if visible of front window then
+                    return URL of active tab of front window
+                  end if
+                end if
+              end try
+            end if
+            return ""
+          end tell`
+        }
+      ];
+      
+      // 활성 앱이 브라우저인 경우 먼저 시도
+      const activeBrowser = browserScripts.find(browser => browser.processName === frontmostApp);
+      if (activeBrowser) {
+        try {
+          console.log(`활성 브라우저 ${activeBrowser.name}에서 URL 확인 중...`);
+          const { stdout, stderr } = await execAsync(`osascript -e '${activeBrowser.script}'`);
+          
+          if (!stderr) {
+            const url = stdout.trim();
+            console.log(`${activeBrowser.name} 응답:`, url);
+            
+            if (url && url !== '' && !url.includes('error') && url.startsWith('http')) {
+              console.log(`✅ 활성 브라우저 ${activeBrowser.name}에서 URL 감지:`, url);
+              return url;
+            }
+          }
+        } catch (error) {
+          console.log(`활성 브라우저 ${activeBrowser.name} 시도 실패:`, error.message);
+        }
+      }
+      
+      // 활성 앱에서 URL을 찾지 못한 경우 다른 브라우저들을 시도
+      for (const browser of browserScripts) {
+        if (browser.processName === frontmostApp) continue; // 이미 시도함
+        
+        try {
+          console.log(`${browser.name} URL 확인 중...`);
+          const { stdout, stderr } = await execAsync(`osascript -e '${browser.script}'`);
+          
+          if (!stderr) {
+            const url = stdout.trim();
+            console.log(`${browser.name} 응답:`, url);
+            
+            if (url && url !== '' && !url.includes('error') && url.startsWith('http')) {
+              console.log(`✅ ${browser.name}에서 URL 감지:`, url);
+              return url;
+            }
+          }
+        } catch (error) {
+          console.log(`${browser.name} 시도 실패:`, error.message);
+          continue;
+        }
+      }
+      
+      console.log('❌ 활성 브라우저 탭 URL을 찾을 수 없음');
+      return null;
+    } catch (error) {
+      console.error('브라우저 URL 가져오기 실패:', error);
+      return null;
+    }
+  }
+
   async takeScreenshot() {
     try {
       console.log('macOS 네이티브 스크린샷 시작...');
+      
+      // 스크린샷 찍기 전에 브라우저 URL 가져오기 (백그라운드에서 숨기기 전에)
+      const currentUrl = await this.getCurrentBrowserUrl();
       
       // 현재 활성 윈도우를 기억하고 Electron 앱을 백그라운드로 숨기기
       if (this.mainWindow && this.mainWindow.isVisible()) {
@@ -192,7 +348,7 @@ class ScrapFlowApp {
         if (code === 0) {
           // 성공적으로 캡처되었으면 코멘트 윈도우 표시
           console.log('스크린샷 캡처 성공:', filepath);
-          this.showCommentWindow(filepath);
+          this.showCommentWindow(filepath, currentUrl);
         } else if (code === 1) {
           // 사용자가 ESC로 취소한 경우
           console.log('사용자가 스크린샷 캡처를 취소했습니다.');
@@ -236,25 +392,27 @@ class ScrapFlowApp {
   }
 
 
-  showCommentWindow(imagePath) {
-    if (this.commentWindow) {
-      this.commentWindow.close();
-    }
+  showCommentWindow(imagePath, sourceUrl = null) {
+    try {
+      if (this.commentWindow) {
+        this.commentWindow.close();
+      }
 
-    this.commentWindow = new BrowserWindow({
-      width: 400,
-      height: 500,
-      resizable: false,
-      alwaysOnTop: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
-      },
-      parent: this.mainWindow,
-      modal: false,
-      show: false
-    });
+      this.commentWindow = new BrowserWindow({
+        width: 500,
+        height: 650,
+        resizable: false,
+        alwaysOnTop: true,
+        icon: path.join(__dirname, '../../logo.png'),
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          preload: path.join(__dirname, 'preload.js')
+        },
+        parent: this.mainWindow,
+        modal: false,
+        show: false
+      });
 
     const commentUrl = isDev
       ? 'http://localhost:3000/#/comment'
@@ -263,13 +421,22 @@ class ScrapFlowApp {
     this.commentWindow.loadURL(commentUrl);
     
     this.commentWindow.once('ready-to-show', () => {
-      this.commentWindow.show();
-      this.commentWindow.webContents.send('screenshot-captured', imagePath);
+      if (this.commentWindow) {
+        this.commentWindow.show();
+        this.commentWindow.webContents.send('screenshot-captured', { 
+          imagePath, 
+          sourceUrl 
+        });
+      }
     });
 
-    this.commentWindow.on('closed', () => {
+      this.commentWindow.on('closed', () => {
+        this.commentWindow = null;
+      });
+    } catch (error) {
+      console.error('코멘트 윈도우 생성 실패:', error);
       this.commentWindow = null;
-    });
+    }
   }
 
   setupIpcHandlers() {
@@ -340,19 +507,9 @@ class ScrapFlowApp {
       return await this.createShareImage(scrapData);
     });
 
-    ipcMain.handle('import-scrap', async (event, exportData) => {
-      return await this.database.importScrap(exportData);
-    });
-
     ipcMain.handle('show-save-dialog', async (event, options) => {
       const { dialog } = require('electron');
       const result = await dialog.showSaveDialog(this.mainWindow, options);
-      return result;
-    });
-
-    ipcMain.handle('show-open-dialog', async (event, options) => {
-      const { dialog } = require('electron');
-      const result = await dialog.showOpenDialog(this.mainWindow, options);
       return result;
     });
 
@@ -370,6 +527,10 @@ class ScrapFlowApp {
 
     ipcMain.handle('show-item-in-folder', async (event, filePath) => {
       shell.showItemInFolder(filePath);
+    });
+
+    ipcMain.handle('open-external', async (event, url) => {
+      shell.openExternal(url);
     });
 
     // 디버깅용 핸들러
@@ -582,6 +743,24 @@ class ScrapFlowApp {
             .by-scrapflow {
               color: #9CA3AF;
             }
+            .source-url {
+              margin-bottom: 12px;
+              padding: 8px 12px;
+              background: #EFF6FF;
+              border: 1px solid #DBEAFE;
+              border-radius: 6px;
+              font-size: 11px;
+            }
+            .url-label {
+              color: #1D4ED8;
+              font-weight: 500;
+              margin-bottom: 4px;
+            }
+            .url-text {
+              color: #1E40AF;
+              word-break: break-all;
+              line-height: 1.3;
+            }
           </style>
         </head>
         <body>
@@ -595,6 +774,12 @@ class ScrapFlowApp {
             </div>
             <div class="content">
               <div class="comment">${truncatedComment}</div>
+              ${scrapData.source_url ? `
+                <div class="source-url">
+                  <div class="url-label">🔗 출처:</div>
+                  <div class="url-text">${scrapData.source_url}</div>
+                </div>
+              ` : ''}
               <div class="footer">
                 <div class="date">${formattedDate}</div>
                 <div class="by-scrapflow">by ScrapFlow</div>

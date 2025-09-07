@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeFile: (filePath, data) => ipcRenderer.invoke('write-file', filePath, data),
   readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
   showItemInFolder: (filePath) => ipcRenderer.invoke('show-item-in-folder', filePath),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
   // 디버깅용
   debugDatabase: () => ipcRenderer.invoke('debug-database')

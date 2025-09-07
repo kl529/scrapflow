@@ -90,6 +90,26 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
           )}
         </div>
         
+        {scrap.source_url && (
+          <div className="mb-2">
+            <div className="flex items-center text-xs text-blue-600">
+              <span className="mr-1">🔗</span>
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(scrap.source_url);
+                }}
+                className="hover:underline cursor-pointer truncate"
+                title={`클릭하여 브라우저에서 열기: ${scrap.source_url}`}
+              >
+                {scrap.source_url.length > 30 ? scrap.source_url.substring(0, 30) + '...' : scrap.source_url}
+              </a>
+            </div>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center">
             <span

@@ -230,6 +230,29 @@ const ScrapModal = ({ scrap, onClose }) => {
               </div>
             )}
 
+            {/* 출처 URL */}
+            {scrap.source_url && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <span className="mr-2">🔗</span>
+                  출처 링크
+                </h3>
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                  <a 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(scrap.source_url);
+                    }}
+                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer break-all text-sm"
+                    title="클릭하여 브라우저에서 열기"
+                  >
+                    {scrap.source_url}
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* 메타 정보 */}
             <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
               <span className="flex items-center">
