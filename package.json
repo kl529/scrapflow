@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev-react\" \"wait-on http://localhost:3000 && electron .\"",
     "dev-react": "react-scripts start",
     "build": "react-scripts build && npm run copy-main",
-    "copy-main": "cp -r src/main build/",
+    "copy-main": "cp -r src/main build/ && cp logo.png build/",
     "build-electron": "npm run build && electron-builder",
     "build-win": "npm run build && electron-builder --win",
     "build-mac": "npm run build && electron-builder --mac",
@@ -69,8 +69,10 @@
       "owner": "kl529",
       "repo": "scrapflow"
     },
+    "icon": "logo.png",
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "logo.png",
       "target": [
         {
           "target": "dmg",
@@ -86,6 +88,7 @@
       "identity": null
     },
     "win": {
+      "icon": "logo.png",
       "target": [
         {
           "target": "nsis",
@@ -99,6 +102,7 @@
       "verifyUpdateCodeSignature": false
     },
     "linux": {
+      "icon": "logo.png",
       "target": [
         {
           "target": "AppImage",

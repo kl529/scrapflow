@@ -28,6 +28,7 @@ class DatabaseManager {
         comment TEXT,
         category TEXT NOT NULL,
         ocr_text TEXT,
+        source_url TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -56,10 +57,16 @@ class DatabaseManager {
     try {
       const tableInfo = this.db.prepare("PRAGMA table_info(scraps)").all();
       const hasOcrText = tableInfo.some(column => column.name === 'ocr_text');
+      const hasSourceUrl = tableInfo.some(column => column.name === 'source_url');
       
       if (!hasOcrText) {
         this.db.exec('ALTER TABLE scraps ADD COLUMN ocr_text TEXT');
         console.log('OCR 텍스트 컬럼 추가 완료');
+      }
+      
+      if (!hasSourceUrl) {
+        this.db.exec('ALTER TABLE scraps ADD COLUMN source_url TEXT');
+        console.log('출처 URL 컬럼 추가 완료');
       }
     } catch (err) {
       console.error('데이터베이스 마이그레이션 실패:', err);
@@ -141,12 +148,12 @@ class DatabaseManager {
   }
 
   async saveScrap(scrapData) {
-    const { image_path, comment, category, ocr_text = null } = scrapData;
-    const query = 'INSERT INTO scraps (image_path, comment, category, ocr_text) VALUES (?, ?, ?, ?)';
+    const { image_path, comment, category, ocr_text = null, source_url = null } = scrapData;
+    const query = 'INSERT INTO scraps (image_path, comment, category, ocr_text, source_url) VALUES (?, ?, ?, ?, ?)';
 
     try {
       const stmt = this.db.prepare(query);
-      const result = stmt.run([image_path, comment, category, ocr_text]);
+      const result = stmt.run([image_path, comment, category, ocr_text, source_url]);
       const returnData = { id: result.lastInsertRowid, ...scrapData };
       await this.updateCategoryCount(category);
       return returnData;
@@ -301,46 +308,6 @@ class DatabaseManager {
     }
   }
 
-  async importScrap(exportData) {
-    const fs = require('fs');
-    const crypto = require('crypto');
-    const { app } = require('electron');
-
-    try {
-      let imagePath = null;
-
-      // 이미지 데이터가 있으면 파일로 저장
-      if (exportData.image) {
-        const imagesDir = path.join(app.getPath('userData'), 'scrapflow_images');
-        if (!fs.existsSync(imagesDir)) {
-          fs.mkdirSync(imagesDir, { recursive: true });
-        }
-
-        // 고유한 파일명 생성
-        const timestamp = new Date().getTime();
-        const randomId = crypto.randomBytes(8).toString('hex');
-        const fileName = `imported_${timestamp}_${randomId}${exportData.image.extension}`;
-        imagePath = path.join(imagesDir, fileName);
-
-        // Base64 데이터를 파일로 저장
-        const imageBuffer = Buffer.from(exportData.image.data, 'base64');
-        fs.writeFileSync(imagePath, imageBuffer);
-      }
-
-      // 스크랩 데이터를 데이터베이스에 저장
-      const scrapData = {
-        image_path: imagePath,
-        comment: exportData.scrap.comment,
-        category: exportData.scrap.category,
-        ocr_text: exportData.scrap.ocr_text
-      };
-
-      const savedScrap = await this.saveScrap(scrapData);
-      return savedScrap;
-    } catch (err) {
-      throw err;
-    }
-  }
 
   close() {
     if (this.db) {

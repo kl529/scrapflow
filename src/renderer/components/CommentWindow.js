@@ -4,15 +4,24 @@ import toast from 'react-hot-toast';
 
 const CommentWindow = () => {
   const [imagePath, setImagePath] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [comment, setComment] = useState('');
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [ocrProcessing, setOcrProcessing] = useState(false);
+  const [showUrl, setShowUrl] = useState(false);
 
   useEffect(() => {
-    const handleScreenshotCaptured = (path) => {
-      setImagePath(path);
+    const handleScreenshotCaptured = (data) => {
+      if (typeof data === 'string') {
+        // 이전 버전 호환성
+        setImagePath(data);
+      } else {
+        // 새로운 버전 - URL 포함
+        setImagePath(data.imagePath);
+        setSourceUrl(data.sourceUrl || '');
+      }
     };
 
     window.electronAPI.onScreenshotCaptured(handleScreenshotCaptured);
@@ -42,7 +51,8 @@ const CommentWindow = () => {
       const scrapData = {
         image_path: imagePath,
         comment: comment.trim(),
-        category: category
+        category: category,
+        source_url: sourceUrl
       };
 
       // OCR 처리 포함한 저장 (시간이 걸릴 수 있음)
@@ -96,6 +106,49 @@ const CommentWindow = () => {
             )}
           </div>
         </div>
+        
+        {sourceUrl && (
+          <div className="mb-3">
+            <button
+              onClick={() => setShowUrl(!showUrl)}
+              className="flex items-center justify-between w-full p-2 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+            >
+              <div className="flex items-center">
+                <div className="text-blue-600 mr-2">🔗</div>
+                <div className="text-sm text-blue-700 font-medium">출처 URL</div>
+              </div>
+              <div className="text-blue-600">
+                {showUrl ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
+              </div>
+            </button>
+            
+            {showUrl && (
+              <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-sm text-blue-800 break-all">
+                  <a 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(sourceUrl);
+                    }}
+                    className="hover:underline cursor-pointer"
+                    title="클릭하여 브라우저에서 열기"
+                  >
+                    {sourceUrl}
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
