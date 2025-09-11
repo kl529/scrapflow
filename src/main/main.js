@@ -19,15 +19,26 @@ class ScrapFlowApp {
   }
 
   setupApp() {
-    app.whenReady().then(() => {
-      this.setupProtocol();
-      this.createMainWindow();
-      this.setupTray();
-      this.registerGlobalShortcuts();
-      this.database.init();
+    app.whenReady().then(async () => {
+      const startTime = Date.now();
+      console.log('🚀 ScrapFlow 앱 시작...');
       
-      // OCR 서비스 초기화 시도
-      this.initOCR();
+      // 동시에 실행 가능한 초기화 작업들을 병렬로 처리
+      await Promise.all([
+        this.setupProtocol(),
+        this.database.init(),
+        this.setupTray(),
+      ]);
+      
+      // 메인 윈도우는 즉시 생성하되 보이지 않게 설정
+      this.createMainWindow();
+      this.registerGlobalShortcuts();
+      
+      // OCR 서비스는 백그라운드에서 지연 초기화 (논블로킹)
+      this.initOCRLazy();
+      
+      const initTime = Date.now() - startTime;
+      console.log(`✅ ScrapFlow 초기화 완료: ${initTime}ms`);
       
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -59,6 +70,22 @@ class ScrapFlowApp {
     }
   }
 
+  // 지연된 OCR 초기화 (논블로킹)
+  initOCRLazy() {
+    // 앱 시작 후 2초 후에 OCR 초기화 시작
+    setTimeout(async () => {
+      try {
+        console.log('🔤 OCR 서비스 백그라운드 초기화 시작...');
+        const startTime = Date.now();
+        await this.ocrService.initialize();
+        const initTime = Date.now() - startTime;
+        console.log(`✅ OCR 서비스 초기화 완료: ${initTime}ms`);
+      } catch (error) {
+        console.error('OCR 서비스 초기화 실패:', error.message);
+      }
+    }, 2000);
+  }
+
   setupProtocol() {
     // 로컬 파일에 접근하기 위한 커스텀 프로토콜 등록
     protocol.registerFileProtocol('scrapflow', (request, callback) => {
@@ -68,31 +95,55 @@ class ScrapFlowApp {
   }
 
   createMainWindow() {
-    this.mainWindow = new BrowserWindow({
+    const windowConfig = {
       width: 1200,
       height: 800,
       icon: path.join(__dirname, '../../logo.png'),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
+        // 성능 최적화 옵션
+        backgroundThrottling: false, // 백그라운드에서도 성능 유지
+        enableRemoteModule: false,   // 보안 및 성능 향상
       },
-      show: false
-    });
+      show: false,
+      // 윈도우 생성 최적화
+      paintWhenInitiallyHidden: false,
+    };
+
+    this.mainWindow = new BrowserWindow(windowConfig);
 
     const startUrl = isDev 
       ? 'http://localhost:3000' 
       : `file://${path.join(__dirname, '../../build/index.html')}`;
     
+    // 페이지 로딩 시작 시간 측정
+    const loadStartTime = Date.now();
     this.mainWindow.loadURL(startUrl);
 
     this.mainWindow.once('ready-to-show', () => {
+      const loadTime = Date.now() - loadStartTime;
+      console.log(`🖼️ 메인 윈도우 로딩 완료: ${loadTime}ms`);
       this.mainWindow.show();
+      
+      // 개발 모드에서만 개발자 도구 자동 열기
+      if (isDev) {
+        // this.mainWindow.webContents.openDevTools();
+      }
     });
 
     this.mainWindow.on('closed', () => {
       this.mainWindow = null;
     });
+
+    // 메모리 사용량 모니터링 (개발 모드에서만)
+    if (isDev) {
+      this.mainWindow.webContents.on('did-finish-load', () => {
+        const memoryUsage = process.memoryUsage();
+        console.log(`📊 메모리 사용량: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`);
+      });
+    }
   }
 
   setupTray() {
