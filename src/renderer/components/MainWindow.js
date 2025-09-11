@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ScrapGrid from './ScrapGrid';
@@ -47,7 +47,8 @@ const MainWindow = () => {
     loadScraps();
   }, [selectedCategory, dateFilter, searchText]);
 
-  const loadData = async () => {
+  // useCallback으로 함수들을 메모이제이션하여 불필요한 리렌더링 방지
+  const loadData = useCallback(async () => {
     try {
       const [scrapsData, categoriesData] = await Promise.all([
         window.electronAPI.getScraps(),
@@ -61,9 +62,9 @@ const MainWindow = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadScraps = async () => {
+  const loadScraps = useCallback(async () => {
     try {
       const filters = {
         category: selectedCategory,
@@ -76,9 +77,9 @@ const MainWindow = () => {
     } catch (error) {
       console.error('스크랩 로드 실패:', error);
     }
-  };
+  }, [selectedCategory, dateFilter, searchText]);
 
-  const handleDeleteScrap = async (id) => {
+  const handleDeleteScrap = useCallback(async (id) => {
     try {
       await window.electronAPI.deleteScrap(id);
       loadScraps();
@@ -86,16 +87,16 @@ const MainWindow = () => {
     } catch (error) {
       console.error('스크랩 삭제 실패:', error);
     }
-  };
+  }, [loadScraps]);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const categoriesData = await window.electronAPI.getCategories();
       setCategories(categoriesData);
     } catch (error) {
       console.error('카테고리 로드 실패:', error);
     }
-  };
+  }, []);
 
   const handleCardClick = (scrap) => {
     setSelectedScrap(scrap);
