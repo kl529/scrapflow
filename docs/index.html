@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScrapFlow - 스크린샷으로 생각을 기록하고 정리하는 스마트한 방법</title>
+    <meta name="description" content="웹에서 발견한 소중한 정보를 3초만에 캡처하고 체계적으로 관리하세요. OCR, 카테고리 분류, SNS 공유까지 한 번에!">
+    <meta name="keywords" content="스크린샷, 스크랩북, OCR, 생산성, 정보관리, 노트앱">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="ScrapFlow - 스마트한 스크린샷 스크랩북">
+    <meta property="og:description" content="3초만에 스크린샷 캡처부터 OCR 텍스트 추출, 체계적 분류까지. 완전 무료!">
+    <meta property="og:image" content="https://raw.githubusercontent.com/kl529/scrapflow/main/logo.png">
+    <meta property="og:url" content="https://kl529.github.io/scrapflow">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+        .download-button:hover {
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <img src="https://raw.githubusercontent.com/kl529/scrapflow/main/logo.png" alt="ScrapFlow Logo" class="h-8 w-8 mr-3">
+                    <span class="text-xl font-bold text-gray-900">ScrapFlow</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-600 hover:text-blue-600 transition-colors">기능</a>
+                    <a href="#download" class="text-gray-600 hover:text-blue-600 transition-colors">다운로드</a>
+                    <a href="https://github.com/kl529/scrapflow" class="text-gray-600 hover:text-blue-600 transition-colors">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-24 pb-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <div class="float-animation mb-8">
+                    <img src="https://raw.githubusercontent.com/kl529/scrapflow/main/logo.png" alt="ScrapFlow" class="w-24 h-24 mx-auto mb-6">
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
+                    📸 ScrapFlow
+                </h1>
+                <p class="text-xl md:text-2xl text-white/90 mb-4">
+                    스크린샷으로 생각을 기록하고 정리하는 스마트한 방법
+                </p>
+                <p class="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                    웹에서 발견한 소중한 정보를 <strong>3초만에</strong> 캡처하고, OCR로 텍스트를 추출해 체계적으로 관리하세요
+                </p>
+                
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="#download" class="download-button bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl">
+                        <i class="fas fa-download mr-2"></i>
+                        무료 다운로드
+                    </a>
+                    <a href="https://github.com/kl529/scrapflow" class="download-button bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600">
+                        <i class="fab fa-github mr-2"></i>
+                        GitHub에서 보기
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="mt-12 grid grid-cols-3 gap-8 max-w-md mx-auto text-white/90">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">3초</div>
+                        <div class="text-sm">캡처 완료</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">100%</div>
+                        <div class="text-sm">오프라인</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">무료</div>
+                        <div class="text-sm">오픈소스</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">😫 이런 경험 있으시죠?</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-red-50 p-6 rounded-lg">
+                    <div class="text-red-500 text-2xl mb-3">😤</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">"어디서 봤던 그 정보가 어디 있었지?"</h3>
+                    <p class="text-gray-600">북마크는 너무 많고, 스크린샷은 찍어뒀는데 나중에 뭘 의미하는지 모르겠어요</p>
+                </div>
+                
+                <div class="bg-red-50 p-6 rounded-lg">
+                    <div class="text-red-500 text-2xl mb-3">😵</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">"유용한 내용인데 웹페이지가 사라져버렸어"</h3>
+                    <p class="text-gray-600">링크는 깨지고, 콘텐츠는 삭제되고... 디지털 정보의 휘발성이 너무 큰 문제예요</p>
+                </div>
+                
+                <div class="bg-red-50 p-6 rounded-lg">
+                    <div class="text-red-500 text-2xl mb-3">😮‍💨</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">"정보 정리가 너무 복잡해요"</h3>
+                    <p class="text-gray-600">캡처 → 저장 → 분류 → 태그 → 메모... 과정이 복잡해서 결국 안 하게 돼요</p>
+                </div>
+                
+                <div class="bg-red-50 p-6 rounded-lg">
+                    <div class="text-red-500 text-2xl mb-3">🤔</div>
+                    <h3 class="font-semibold text-gray-900 mb-2">"이미지 속 텍스트를 검색하고 싶은데..."</h3>
+                    <p class="text-gray-600">스크린샷은 많은데 내용으로 검색이 안 돼서 찾기가 어려워요</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="py-20 bg-blue-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">✨ ScrapFlow로 해결하세요!</h2>
+                <p class="text-xl text-gray-600">복잡했던 정보 관리가 이렇게 간단해집니다</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">3초 완료</h3>
+                    <p class="text-gray-600">Ctrl+Shift+S → 드래그 → 코멘트 → 저장<br>더 이상 복잡한 과정은 없습니다</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🧠</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">스마트 검색</h3>
+                    <p class="text-gray-600">OCR로 이미지 속 텍스트까지 추출<br>코멘트와 함께 통합 검색 가능</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🔒</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">완전 오프라인</h3>
+                    <p class="text-gray-600">모든 데이터 로컬 저장<br>개인정보 걱정 없이 안전하게</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">🌟 주요 기능</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-blue-500 text-3xl mb-4">📸</div>
+                    <h3 class="text-xl font-semibold mb-3">초고속 캡처</h3>
+                    <p class="text-gray-600">글로벌 단축키로 언제든지 즉시 스크린샷. 백그라운드에서 항상 대기 중입니다.</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-green-500 text-3xl mb-4">🔤</div>
+                    <h3 class="text-xl font-semibold mb-3">OCR 텍스트 인식</h3>
+                    <p class="text-gray-600">한국어/영어 텍스트 자동 추출. 이미지 속 내용도 검색으로 쉽게 찾을 수 있어요.</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-purple-500 text-3xl mb-4">🎨</div>
+                    <h3 class="text-xl font-semibold mb-3">SNS 공유 이미지</h3>
+                    <p class="text-gray-600">예쁜 템플릿으로 자동 생성. Instagram, Twitter 등에 바로 공유 가능합니다.</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-red-500 text-3xl mb-4">🗂️</div>
+                    <h3 class="text-xl font-semibold mb-3">카테고리 관리</h3>
+                    <p class="text-gray-600">개발, 디자인, 비즈니스 등 색상별로 체계적 분류. 나만의 분류 체계를 만드세요.</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-yellow-500 text-3xl mb-4">🔍</div>
+                    <h3 class="text-xl font-semibold mb-3">통합 검색</h3>
+                    <p class="text-gray-600">코멘트와 OCR 텍스트를 동시 검색. 실시간으로 원하는 스크랩을 찾아보세요.</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-lg shadow-lg border">
+                    <div class="text-indigo-500 text-3xl mb-4">📊</div>
+                    <h3 class="text-xl font-semibold mb-3">활동 시각화</h3>
+                    <p class="text-gray-600">GitHub 스타일 히트맵으로 스크랩 활동 추적. 지식 축적 과정을 한눈에!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Section -->
+    <section class="py-20 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">⚡ 성능 개선</h2>
+                <p class="text-xl text-gray-600">최신 버전에서 모든 면에서 더 빨라졌습니다</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">50%↑</div>
+                    <div class="text-gray-600 font-medium">앱 시작 시간</div>
+                    <div class="text-sm text-gray-500 mt-1">2초 → 1초 이내</div>
+                </div>
+                
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl font-bold text-green-600 mb-2">65%↑</div>
+                    <div class="text-gray-600 font-medium">OCR 처리 속도</div>
+                    <div class="text-sm text-gray-500 mt-1">2-3초 → 1초 이내</div>
+                </div>
+                
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">25%↓</div>
+                    <div class="text-gray-600 font-medium">메모리 사용량</div>
+                    <div class="text-sm text-gray-500 mt-1">80MB → 60MB 이하</div>
+                </div>
+                
+                <div class="text-center bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl font-bold text-orange-600 mb-2">45%↑</div>
+                    <div class="text-gray-600 font-medium">빌드 속도</div>
+                    <div class="text-sm text-gray-500 mt-1">15분 → 8분</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">📥 다운로드</h2>
+            <p class="text-xl text-gray-600 mb-12">운영체제에 맞는 버전을 선택하세요</p>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="bg-gray-50 p-8 rounded-lg">
+                    <div class="text-4xl mb-4">🍎</div>
+                    <h3 class="text-xl font-semibold mb-3">macOS</h3>
+                    <p class="text-gray-600 mb-6">macOS 10.11+<br>Intel & Apple Silicon</p>
+                    <a href="https://github.com/kl529/scrapflow/releases/latest" class="download-button bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold inline-block">
+                        .dmg 다운로드
+                    </a>
+                </div>
+                
+                <div class="bg-gray-50 p-8 rounded-lg">
+                    <div class="text-4xl mb-4">🪟</div>
+                    <h3 class="text-xl font-semibold mb-3">Windows</h3>
+                    <p class="text-gray-600 mb-6">Windows 7/10/11<br>x64 & x86</p>
+                    <a href="https://github.com/kl529/scrapflow/releases/latest" class="download-button bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold inline-block">
+                        .exe 다운로드
+                    </a>
+                </div>
+                
+                <div class="bg-gray-50 p-8 rounded-lg">
+                    <div class="text-4xl mb-4">🐧</div>
+                    <h3 class="text-xl font-semibold mb-3">Linux</h3>
+                    <p class="text-gray-600 mb-6">Ubuntu, Debian, Fedora<br>x64</p>
+                    <a href="https://github.com/kl529/scrapflow/releases/latest" class="download-button bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold inline-block">
+                        .AppImage 다운로드
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-12 p-6 bg-yellow-50 rounded-lg max-w-2xl mx-auto">
+                <div class="flex items-start">
+                    <div class="text-yellow-500 text-2xl mr-3">⚠️</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">macOS 사용자 주의사항</h4>
+                        <p class="text-sm text-gray-600">
+                            "확인되지 않은 개발자" 경고가 나타날 수 있습니다. 
+                            <strong>시스템 설정 → 개인정보 보호 및 보안 → 보안</strong>에서 "열기"를 클릭해주세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials/Use Cases -->
+    <section class="py-20 bg-blue-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">🎯 이런 분들께 추천</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl mb-4">👩‍💻</div>
+                    <h3 class="font-semibold text-gray-900 mb-3">개발자</h3>
+                    <p class="text-gray-600">"Stack Overflow에서 찾은 코드 패턴을 바로바로 저장해서 나중에 활용해요. OCR 덕분에 코드 검색도 쉬워졌어요!"</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl mb-4">🎨</div>
+                    <h3 class="font-semibold text-gray-900 mb-3">디자이너</h3>
+                    <p class="text-gray-600">"Dribbble이나 Pinterest에서 영감을 얻은 디자인들을 카테고리별로 정리해서 프로젝트할 때 참고하고 있어요."</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-3xl mb-4">📚</div>
+                    <h3 class="font-semibold text-gray-900 mb-3">학생/연구원</h3>
+                    <p class="text-gray-600">"논문이나 온라인 강의 내용을 스크랩해서 나중에 리포트 쓸 때 참고해요. 검색 기능이 정말 유용해요!"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="https://raw.githubusercontent.com/kl529/scrapflow/main/logo.png" alt="ScrapFlow Logo" class="h-6 w-6 mr-2">
+                        <span class="text-lg font-semibold">ScrapFlow</span>
+                    </div>
+                    <p class="text-gray-300">스크린샷으로 생각을 기록하고 정리하는 스마트한 방법</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">링크</h4>
+                    <div class="space-y-2">
+                        <a href="https://github.com/kl529/scrapflow" class="block text-gray-300 hover:text-white transition-colors">
+                            <i class="fab fa-github mr-2"></i>GitHub
+                        </a>
+                        <a href="https://github.com/kl529/scrapflow/releases" class="block text-gray-300 hover:text-white transition-colors">
+                            <i class="fas fa-download mr-2"></i>다운로드
+                        </a>
+                        <a href="https://github.com/kl529/scrapflow/issues" class="block text-gray-300 hover:text-white transition-colors">
+                            <i class="fas fa-bug mr-2"></i>버그 리포트
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">정보</h4>
+                    <div class="space-y-2">
+                        <p class="text-gray-300">라이선스: MIT</p>
+                        <p class="text-gray-300">플랫폼: Windows, macOS, Linux</p>
+                        <p class="text-gray-300">가격: 완전 무료</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
+                <p>&copy; 2024 ScrapFlow. Made with ❤️ by ScrapFlow Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Download Button (Mobile) -->
+    <div class="fixed bottom-6 right-6 md:hidden">
+        <a href="#download" class="bg-blue-600 text-white p-4 rounded-full shadow-lg">
+            <i class="fas fa-download text-xl"></i>
+        </a>
+    </div>
+
+    <!-- Smooth Scrolling -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

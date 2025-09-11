@@ -1,0 +1,19 @@
+title: ScrapFlow
+description: 스크린샷으로 생각을 기록하고 정리하는 스마트한 방법
+url: https://kl529.github.io
+baseurl: /scrapflow
+
+# GitHub Pages 설정
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# 사이트맵 생성
+sitemap: true
+
+# 소셜 미디어
+social:
+  github: kl529/scrapflow
+
+# SEO
+lang: ko
