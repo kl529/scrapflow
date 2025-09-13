@@ -119,7 +119,13 @@ jobs:
         CSC_IDENTITY_AUTO_DISCOVERY: false
 
     - name: List build artifacts
-      run: ls -la dist/
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          dir dist\ /a
+        else
+          ls -la dist/
+        fi
+      shell: bash
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -149,7 +155,13 @@ jobs:
         path: ./artifacts
 
     - name: Display structure of downloaded files
-      run: ls -la artifacts/
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          dir artifacts\ /a
+        else
+          ls -la artifacts/
+        fi
+      shell: bash
 
     - name: Get version and changelog
       id: version
@@ -160,7 +172,7 @@ jobs:
           VERSION="${GITHUB_REF#refs/tags/}"
         fi
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-        
+
         # 간단한 changelog 생성
         if git tag --list | grep -q "${VERSION%.*}"; then
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
@@ -170,6 +182,7 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           fi
         fi
+      shell: bash
 
     - name: Create Release
       id: create_release
