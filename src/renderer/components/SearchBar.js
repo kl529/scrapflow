@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import useLanguage from '../hooks/useLanguage';
 
-const SearchBar = ({ onSearch, placeholder = "스크랩 내용이나 이미지 텍스트로 검색..." }) => {
+const SearchBar = ({ onSearch }) => {
+  const { t } = useLanguage();
   const [searchText, setSearchText] = useState('');
 
   // 실시간 검색 (디바운싱)
@@ -46,7 +48,7 @@ const SearchBar = ({ onSearch, placeholder = "스크랩 내용이나 이미지 �
           type="text"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder={placeholder}
+          placeholder={t('searchPlaceholder')}
           className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
         />
         

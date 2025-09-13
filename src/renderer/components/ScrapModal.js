@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
+import useLanguage from '../hooks/useLanguage';
 
 const ScrapModal = ({ scrap, onClose }) => {
+  const { t, currentLanguage } = useLanguage();
   const [imageError, setImageError] = useState(false);
   const [showOcrText, setShowOcrText] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -35,9 +37,11 @@ const ScrapModal = ({ scrap, onClose }) => {
 
   const formatDate = (dateString) => {
     try {
-      return format(new Date(dateString), 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
+      const dateFormat = currentLanguage === 'ko' ? 'yyyy년 MM월 dd일 HH:mm' : 'MMM dd, yyyy HH:mm';
+      const locale = currentLanguage === 'ko' ? ko : enUS;
+      return format(new Date(dateString), dateFormat, { locale });
     } catch (error) {
-      return '날짜 오류';
+      return t('dateError');
     }
   };
 
@@ -63,11 +67,11 @@ const ScrapModal = ({ scrap, onClose }) => {
       if (shareResult.success) {
         // 저장 대화상자 표시
         const result = await window.electronAPI.showSaveDialog({
-          title: 'SNS 공유 이미지 저장',
+          title: t('saveDialogTitle'),
           defaultPath: `scrapflow_share_${scrap.id}_${new Date().getTime()}.png`,
           filters: [
-            { name: 'PNG 이미지', extensions: ['png'] },
-            { name: '모든 파일', extensions: ['*'] }
+            { name: t('pngImages'), extensions: ['png'] },
+            { name: t('allFiles'), extensions: ['*'] }
           ]
         });
 
@@ -77,7 +81,7 @@ const ScrapModal = ({ scrap, onClose }) => {
           await window.electronAPI.writeFile(result.filePath, shareImageData);
           
           // 성공 알림
-          alert('SNS 공유 이미지가 성공적으로 생성되었습니다!\n\n이미지를 SNS에 업로드하여 공유해보세요.');
+          alert(t('snsShareSuccess'));
           
           // 저장된 파일을 Finder에서 보여주기 (macOS)
           if (window.electronAPI.showItemInFolder) {
@@ -87,7 +91,7 @@ const ScrapModal = ({ scrap, onClose }) => {
       }
     } catch (error) {
       console.error('SNS 공유 이미지 생성 실패:', error);
-      alert('SNS 공유 이미지 생성 중 오류가 발생했습니다.');
+      alert(t('snsShareError'));
     } finally {
       setIsExporting(false);
     }
@@ -131,7 +135,7 @@ const ScrapModal = ({ scrap, onClose }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               )}
-              <span>{isExporting ? 'SNS 이미지 생성중...' : 'SNS 공유'}</span>
+              <span>{isExporting ? t('snsImageGenerating') : t('snsShare')}</span>
             </button>
             
             {/* OCR 텍스트 보기 버튼 */}
@@ -148,7 +152,7 @@ const ScrapModal = ({ scrap, onClose }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                <span>문자인식</span>
+                <span>{t('textRecognition')}</span>
               </button>
             )}
             
@@ -172,13 +176,13 @@ const ScrapModal = ({ scrap, onClose }) => {
                 <div className="flex items-center justify-center h-96 text-gray-400">
                   <div className="text-center">
                     <div className="text-6xl mb-4">🖼️</div>
-                    <div className="text-lg">이미지를 불러올 수 없습니다</div>
+                    <div className="text-lg">{t('imageLoadError')}</div>
                   </div>
                 </div>
               ) : (
                 <img
                   src={window.electronAPI.getImageUrl(scrap.image_path)}
-                  alt="스크랩 이미지"
+                  alt="Scrap image"
                   className="w-full h-auto max-h-[60vh] object-contain"
                   onError={handleImageError}
                 />
@@ -193,7 +197,7 @@ const ScrapModal = ({ scrap, onClose }) => {
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   <span className="mr-2">💭</span>
-                  생각 정리
+                  {t('thoughtOrganization')}
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
@@ -205,11 +209,11 @@ const ScrapModal = ({ scrap, onClose }) => {
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   <span className="mr-2">💭</span>
-                  생각 정리
+                  {t('thoughtOrganization')}
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-gray-400 text-center italic">
-                    코멘트가 없습니다
+                    {t('noComment')}
                   </p>
                 </div>
               </div>
@@ -220,7 +224,7 @@ const ScrapModal = ({ scrap, onClose }) => {
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   <span className="mr-2">🔤</span>
-                  문자인식 결과
+                  {t('ocrResult')}
                 </h3>
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                   <p className="text-gray-900 leading-relaxed whitespace-pre-wrap text-sm">
@@ -235,7 +239,7 @@ const ScrapModal = ({ scrap, onClose }) => {
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                   <span className="mr-2">🔗</span>
-                  출처 링크
+                  {t('sourceLink')}
                 </h3>
                 <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                   <a 
@@ -245,7 +249,7 @@ const ScrapModal = ({ scrap, onClose }) => {
                       window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(scrap.source_url);
                     }}
                     className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer break-all text-sm"
-                    title="클릭하여 브라우저에서 열기"
+                    title={t('clickToOpenInBrowser')}
                   >
                     {scrap.source_url}
                   </a>

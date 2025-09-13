@@ -1,16 +1,21 @@
-import React from 'react';
-import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
+import React, { useState } from 'react';
+import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, startOfWeek, endOfWeek, isSameDay, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import useLanguage from '../hooks/useLanguage';
 
-const HeatmapCalendar = ({ data }) => {
-  const now = new Date();
-  const yearStart = startOfYear(now);
-  const yearEnd = endOfYear(now);
+const HeatmapCalendar = ({ data, onDateClick }) => {
+  const { t, currentLanguage } = useLanguage();
+  const [selectedDate, setSelectedDate] = useState(null);
   
-  // 올해의 모든 날짜 생성
+  const now = new Date();
+  // 지난 1년간의 데이터만 표시 (GitHub 스타일)
+  const endDate = now;
+  const startDate = subDays(now, 364); // 정확히 365일 (52주 * 7일 + 1일)
+  
+  // 지난 1년간의 모든 날짜 생성
   const allDays = eachDayOfInterval({
-    start: yearStart,
-    end: yearEnd
+    start: startDate,
+    end: endDate
   });
 
   // 데이터를 날짜별로 매핑
@@ -46,29 +51,27 @@ const HeatmapCalendar = ({ data }) => {
     return colorMap[intensity] || 'bg-gray-100';
   };
 
-  // 주별로 날짜 그룹핑
+  // GitHub 스타일: 세로 7개(요일별), 가로로 주차 배열
   const weeks = [];
-  let currentWeek = [];
+  let currentWeek = new Array(7).fill(null); // 일요일(0)부터 토요일(6)까지
   
-  // 첫 주의 시작을 일요일로 맞추기 위해 빈 칸 추가
-  const firstDayOfWeek = getDay(yearStart);
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    currentWeek.push(null);
-  }
-
-  allDays.forEach(day => {
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+  // 시작 날짜의 요일로 첫 주 시작점 결정
+  const firstDayOfWeek = getDay(startDate);
+  
+  allDays.forEach((day, index) => {
+    const dayOfWeek = getDay(day);
+    
+    // 새로운 주 시작 (일요일이거나 첫 번째 날짜)
+    if (dayOfWeek === 0 && index > 0) {
+      weeks.push([...currentWeek]);
+      currentWeek = new Array(7).fill(null);
     }
-    currentWeek.push(day);
+    
+    currentWeek[dayOfWeek] = day;
   });
-
-  // 마지막 주 완성
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push(null);
-    }
+  
+  // 마지막 주 추가
+  if (currentWeek.some(day => day !== null)) {
     weeks.push(currentWeek);
   }
 
@@ -79,7 +82,7 @@ const HeatmapCalendar = ({ data }) => {
   weeks.forEach((week, weekIndex) => {
     const firstValidDay = week.find(day => day !== null);
     if (firstValidDay) {
-      const monthStr = format(firstValidDay, 'MMM', { locale: ko });
+      const monthStr = format(firstValidDay, 'MMM', { locale: currentLanguage === 'ko' ? ko : undefined });
       if (!monthsShown.has(monthStr)) {
         monthLabels.push({ month: monthStr, weekIndex });
         monthsShown.add(monthStr);
@@ -87,36 +90,46 @@ const HeatmapCalendar = ({ data }) => {
     }
   });
 
+  const handleDateClick = (date, count) => {
+    setSelectedDate(date);
+    if (onDateClick) {
+      onDateClick(date, count);
+    }
+  };
+
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
-      {/* 범례 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-gray-600">
-          {format(now, 'yyyy년', { locale: ko })} 스크랩 활동
+    <div className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">📊 {t('scrapActivity')}</h3>
+          <p className="text-sm text-gray-500">
+            {t('lastYearTotal')} <span className="font-semibold text-gray-700">{data.reduce((sum, item) => sum + item.count, 0)}</span> {t('scrapsCount')}
+          </p>
         </div>
-        <div className="flex items-center space-x-2 text-xs text-gray-600">
-          <span>적음</span>
-          <div className="flex space-x-1">
-            <div className="w-3 h-3 bg-gray-100 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-300 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-600 rounded-sm"></div>
+        <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <span>{t('less')}</span>
+          <div className="flex space-x-0.5">
+            <div className="w-2.5 h-2.5 bg-gray-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 bg-green-200 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 bg-green-300 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 bg-green-500 rounded-sm"></div>
+            <div className="w-2.5 h-2.5 bg-green-600 rounded-sm"></div>
           </div>
-          <span>많음</span>
+          <span>{t('more')}</span>
         </div>
       </div>
 
-      {/* 달력 */}
-      <div className="overflow-x-auto">
-        <div className="flex space-x-1">
-          {/* 요일 라벨 */}
-          <div className="flex flex-col space-y-1">
-            <div className="h-4"></div> {/* 월 라벨 공간 */}
-            {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+      {/* 히트맵 */}
+      <div className="overflow-x-auto pb-2">
+        <div className="flex items-start space-x-0.5 min-w-max">
+          {/* 요일 라벨 (세로) */}
+          <div className="flex flex-col space-y-0.5 mr-2">
+            <div className="h-3"></div> {/* 월 라벨 공간 */}
+            {(currentLanguage === 'ko' ? ['일', '월', '화', '수', '목', '금', '토'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']).map((day, index) => (
               <div 
                 key={day}
-                className={`w-3 h-3 text-xs text-gray-600 flex items-center justify-center ${
+                className={`w-2.5 h-2.5 text-[10px] text-gray-500 flex items-center justify-end pr-1 ${
                   index % 2 === 1 ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -125,32 +138,39 @@ const HeatmapCalendar = ({ data }) => {
             ))}
           </div>
 
-          {/* 주별 달력 */}
+          {/* 주별 컬럼 */}
           {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col space-y-1">
+            <div key={weekIndex} className="flex flex-col space-y-0.5">
               {/* 월 라벨 */}
-              <div className="h-4 text-xs text-gray-600 flex items-center justify-center">
+              <div className="h-3 text-[10px] text-gray-500 flex items-center justify-center">
                 {monthLabels.find(label => label.weekIndex === weekIndex)?.month || ''}
               </div>
               
-              {/* 일별 셀 */}
+              {/* 요일별 셀 (세로 7개) */}
               {week.map((day, dayIndex) => {
                 if (!day) {
-                  return <div key={dayIndex} className="w-3 h-3"></div>;
+                  return <div key={dayIndex} className="w-2.5 h-2.5"></div>;
                 }
 
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const count = dataMap[dateStr] || 0;
                 const colorClass = getColorClass(count);
                 const isToday = isSameDay(day, now);
+                const isSelected = selectedDate && isSameDay(day, selectedDate);
 
                 return (
                   <div
                     key={dateStr}
-                    className={`w-3 h-3 rounded-sm ${colorClass} ${
-                      isToday ? 'ring-2 ring-blue-500' : ''
-                    } hover:ring-2 hover:ring-gray-400 transition-all cursor-pointer`}
-                    title={`${format(day, 'yyyy년 M월 d일', { locale: ko })}: ${count}개 스크랩`}
+                    onClick={() => handleDateClick(day, count)}
+                    className={`w-2.5 h-2.5 rounded-sm cursor-pointer transition-all duration-200 ${colorClass} ${
+                      isToday ? 'ring-1 ring-blue-400 ring-offset-1' : ''
+                    } ${
+                      isSelected ? 'ring-2 ring-purple-400 ring-offset-1' : ''
+                    } hover:ring-1 hover:ring-gray-400 hover:ring-offset-1 hover:scale-110`}
+                    title={currentLanguage === 'ko'
+                      ? `${format(day, 'yyyy년 M월 d일 (E)', { locale: ko })}: ${count}개 스크랩`
+                      : `${format(day, 'E, MMM d, yyyy')}: ${count} scraps`
+                    }
                   />
                 );
               })}
@@ -159,14 +179,13 @@ const HeatmapCalendar = ({ data }) => {
         </div>
       </div>
 
-      {/* 통계 요약 */}
-      <div className="mt-4 flex justify-between text-xs text-gray-600">
-        <span>
-          총 {data.reduce((sum, item) => sum + item.count, 0)}개의 스크랩
-        </span>
-        <span>
-          연속 기록: {calculateStreak(data, now)}일
-        </span>
+      {/* 하단 정보 */}
+      <div className="mt-4 flex justify-between items-center text-xs text-gray-500 pt-4 border-t border-gray-100">
+        <div className="flex items-center space-x-4">
+          <span>🔥 {t('streak')} {calculateStreak(data, now)}{t('days')}</span>
+          <span>📈 {t('maxPerDay')} {maxCount}{t('perDay')}</span>
+        </div>
+        <span>{t('last365Days')}</span>
       </div>
     </div>
   );

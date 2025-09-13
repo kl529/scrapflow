@@ -7,7 +7,7 @@
 **스크린샷으로 생각을 기록하고 정리하는 스마트한 방법**
 
 [![GitHub release](https://img.shields.io/github/release/kl529/scrapflow.svg)](https://github.com/kl529/scrapflow/releases)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/kl529/scrapflow/releases)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey.svg)](https://github.com/kl529/scrapflow/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/github/downloads/kl529/scrapflow/total.svg)](https://github.com/kl529/scrapflow/releases)
 
@@ -105,12 +105,6 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 혁신�
 </td>
 <td align="center" width="33%">
 
-### 🐧 Linux
-![Linux](https://img.shields.io/badge/Linux-Ubuntu%2018.04+-blue?style=for-the-badge&logo=linux)
-
-**모든 주요 배포판 지원**
-- `.AppImage` 파일 다운로드
-- 실행 권한 부여 후 실행
 
 </td>
 </tr>
@@ -160,7 +154,7 @@ sudo xattr -rd com.apple.quarantine /Applications/ScrapFlow.app
 
 ### ⌨️ 키보드 단축키
 
-| 기능 | Windows/Linux | macOS |
+| 기능 | Windows | macOS |
 |------|---------------|--------|
 | 스크린샷 캡처 | `Ctrl+Shift+S` | `Cmd+Shift+S` |
 | 메인 창 열기 | 트레이 아이콘 더블클릭 | 트레이 아이콘 더블클릭 |
@@ -188,7 +182,6 @@ ScrapFlow는 모든 데이터를 로컬에 안전하게 저장합니다:
 |----------|-----------|
 | **macOS** | `~/Library/Application Support/scrapflow/` |
 | **Windows** | `%APPDATA%/scrapflow/` |
-| **Linux** | `~/.config/scrapflow/` |
 
 포함 파일:
 - `scrapflow.db`: SQLite 데이터베이스 (메타데이터)  
@@ -247,7 +240,6 @@ npm run build
 # 5. 플랫폼별 패키징
 npm run build-mac    # macOS
 npm run build-win    # Windows  
-npm run build-linux  # Linux
 npm run build-all    # 모든 플랫폼
 ```
 
@@ -333,7 +325,6 @@ Made with ❤️ by ScrapFlow Team
 **확인사항:**
 - **macOS**: 시스템 설정 → 개인정보보호 및 보안 → 화면 녹화 권한 확인
 - **Windows**: 다른 스크린샷 앱과 충돌하지 않는지 확인  
-- **Linux**: X11 환경에서만 동작합니다 (Wayland 미지원)
 
 </details>
 
@@ -344,8 +335,7 @@ Made with ❤️ by ScrapFlow Team
 1. ScrapFlow 종료
 2. 데이터 폴더 전체 복사:
    - macOS: `~/Library/Application Support/scrapflow/`
-   - Windows: `%APPDATA%/scrapflow/`  
-   - Linux: `~/.config/scrapflow/`
+   - Windows: `%APPDATA%/scrapflow/`
 3. 안전한 장소에 보관
 
 </details>

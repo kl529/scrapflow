@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import useLanguage from '../hooks/useLanguage';
 
 const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
+  const { t, currentLanguage } = useLanguage();
   const [imageError, setImageError] = useState(false);
   const [showFullComment, setShowFullComment] = useState(false);
 
@@ -11,8 +13,8 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
   };
 
   const handleDelete = (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-    if (window.confirm('이 스크랩을 삭제하시겠습니까?')) {
+    e.stopPropagation(); // Prevent card click event propagation
+    if (window.confirm(t('deleteConfirm'))) {
       onDelete(scrap.id);
     }
   };
@@ -25,9 +27,10 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
 
   const formatDate = (dateString) => {
     try {
-      return format(new Date(dateString), 'yyyy.MM.dd HH:mm', { locale: ko });
+      const locale = currentLanguage === 'ko' ? ko : undefined;
+      return format(new Date(dateString), 'yyyy.MM.dd HH:mm', { locale });
     } catch (error) {
-      return '날짜 오류';
+      return t('dateError');
     }
   };
 
@@ -46,13 +49,13 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
               <div className="text-4xl mb-2">🖼️</div>
-              <div className="text-sm">이미지를 불러올 수 없습니다</div>
+              <div className="text-sm">{t('imageLoadError')}</div>
             </div>
           </div>
         ) : (
           <img
             src={window.electronAPI.getImageUrl(scrap.image_path)}
-            alt="스크랩 이미지"
+            alt={t('scrapImage')}
             className="w-full h-full object-cover"
             onError={handleImageError}
           />
@@ -81,12 +84,12 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
                   }}
                   className="text-xs text-blue-500 hover:text-blue-600"
                 >
-                  {showFullComment ? '접기' : '더보기'}
+                  {showFullComment ? t('showLess') : t('showMore')}
                 </button>
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">💭 코멘트 없음</p>
+            <p className="text-sm text-gray-400">{t('noComment')}</p>
           )}
         </div>
         
@@ -102,7 +105,7 @@ const ScrapCard = ({ scrap, onDelete, onCardClick }) => {
                   window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(scrap.source_url);
                 }}
                 className="hover:underline cursor-pointer truncate"
-                title={`클릭하여 브라우저에서 열기: ${scrap.source_url}`}
+                title={`${t('clickToOpenSource')}: ${scrap.source_url}`}
               >
                 {scrap.source_url.length > 30 ? scrap.source_url.substring(0, 30) + '...' : scrap.source_url}
               </a>
