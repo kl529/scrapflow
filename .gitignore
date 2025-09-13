@@ -112,3 +112,5 @@ ehthumbs.db
 screenshots/
 *.db
 *.db-journal
+
+.serena/

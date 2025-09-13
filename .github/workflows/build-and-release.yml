@@ -69,11 +69,6 @@ jobs:
             build-command: build-win
             artifact-name: Windows
             artifact-path: dist/*.exe
-          - name: Linux (x64)
-            os: ubuntu-latest
-            build-command: build-linux
-            artifact-name: Linux
-            artifact-path: dist/*.AppImage
 
     steps:
     - name: Check out Git repository
@@ -113,12 +108,6 @@ jobs:
     - name: Install native dependencies 
       run: npm run postinstall
 
-    # Linux 전용 dependencies 설치
-    - name: Install system dependencies (Linux)
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libnss3-dev libgconf-2-4 libxrandr2 libasound2-dev libxtst6 libxss1 libasound2
 
     - name: Build Electron app
       run: npm run ${{ matrix.config.build-command }}
@@ -218,7 +207,6 @@ jobs:
           |---------|------|----------|
           | 🍎 **macOS** | `.dmg` | Intel & Apple Silicon 지원 |
           | 🪟 **Windows** | `.exe` | x64 & x86 지원 |
-          | 🐧 **Linux** | `.AppImage` | Ubuntu, Debian, Fedora 등 |
           
           ### 🚀 설치 방법
           1. 위에서 운영체제에 맞는 파일 다운로드
@@ -229,7 +217,6 @@ jobs:
           ### 🔧 시스템 요구사항
           - **macOS**: 10.11 (El Capitan) 이상
           - **Windows**: Windows 7/10/11
-          - **Linux**: Ubuntu 18.04+ 또는 동급 배포판
           
           ### 📝 변경사항
           ${{ steps.version.outputs.CHANGELOG }}

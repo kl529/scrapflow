@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import useLanguage from '../hooks/useLanguage';
 
 const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
@@ -30,7 +32,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
       }
     } catch (error) {
       console.error('카테고리 로드 실패:', error);
-      toast.error('카테고리를 불러올 수 없습니다');
+      toast.error(t('categoryLoadError'));
     } finally {
       setLoading(false);
     }
@@ -40,17 +42,17 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
     e.preventDefault();
     
     if (!newCategoryName.trim()) {
-      toast.error('카테고리 이름을 입력해주세요');
+      toast.error(t('categoryNameRequired'));
       return;
     }
 
     if (newCategoryName.trim() === '전체') {
-      toast.error('\'전체\'는 예약된 이름입니다');
+      toast.error(t('reservedCategoryName'));
       return;
     }
 
     if (categories.some(cat => cat.name === newCategoryName.trim())) {
-      toast.error('이미 존재하는 카테고리입니다');
+      toast.error(t('categoryExists'));
       return;
     }
 
@@ -66,10 +68,10 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
       setSelectedCategory(newCategoryName.trim());
       setShowNewCategoryForm(false);
       setNewCategoryName('');
-      toast.success('카테고리가 생성되었습니다');
+      toast.success(t('categoryCreated'));
     } catch (error) {
       console.error('카테고리 생성 실패:', error);
-      toast.error('카테고리 생성에 실패했습니다');
+      toast.error(t('categorySaveFailed'));
     } finally {
       setCreating(false);
     }
@@ -79,7 +81,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
     if (selectedCategory) {
       onCategorySelected(selectedCategory);
     } else {
-      toast.error('카테고리를 선택해주세요');
+      toast.error(t('categorySelect'));
     }
   };
 
@@ -89,7 +91,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
         <div className="bg-white rounded-lg p-6 w-80">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <span className="ml-2 text-gray-600">로딩 중...</span>
+            <span className="ml-2 text-gray-600">{t('loading')}</span>
           </div>
         </div>
       </div>
@@ -100,7 +102,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-80 max-w-sm mx-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          📂 카테고리 선택
+          📂 {t('categorySelectTitle')}
         </h3>
         
         {!showNewCategoryForm ? (
@@ -137,7 +139,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
               className="w-full p-2 text-blue-600 hover:bg-blue-50 rounded-lg mb-4 text-sm font-medium"
               disabled={disabled}
             >
-              + 새 카테고리 생성
+              + {t('createNewCategory')}
             </button>
             
             <div className="flex space-x-3">
@@ -146,14 +148,14 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
                 className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={disabled}
               >
-                취소
+                {t('cancel')}
               </button>
               <button
                 onClick={handleConfirm}
                 className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
                 disabled={!selectedCategory || disabled}
               >
-                완료
+                {t('complete')}
               </button>
             </div>
           </div>
@@ -161,13 +163,13 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
           <form onSubmit={handleCreateCategory}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                카테고리 이름
+                {t('categoryName')}
               </label>
               <input
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="예: 학습자료"
+                placeholder={t('categoryNamePlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
                 disabled={creating}
@@ -176,7 +178,7 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                색상 선택
+                {t('colorSelection')}
               </label>
               <div className="grid grid-cols-5 gap-2">
                 {predefinedColors.map((color) => (
@@ -203,14 +205,14 @@ const CategorySelector = ({ onCategorySelected, onCancel, disabled }) => {
                 className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={creating}
               >
-                뒤로
+                {t('back')}
               </button>
               <button
                 type="submit"
                 className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
                 disabled={!newCategoryName.trim() || creating}
               >
-                {creating ? '생성 중...' : '생성'}
+                {creating ? t('creating') : t('create')}
               </button>
             </div>
           </form>

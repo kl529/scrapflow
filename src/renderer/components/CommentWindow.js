@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import CategorySelector from './CategorySelector';
 import toast from 'react-hot-toast';
+import useLanguage from '../hooks/useLanguage';
 
 const CommentWindow = () => {
+  const { t } = useLanguage();
   const [imagePath, setImagePath] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [comment, setComment] = useState('');
@@ -33,7 +35,7 @@ const CommentWindow = () => {
 
   const handleSave = () => {
     if (!imagePath) {
-      toast.error('이미지가 없습니다');
+      toast.error(t('noImage'));
       return;
     }
     setShowCategorySelector(true);
@@ -56,11 +58,11 @@ const CommentWindow = () => {
       };
 
       // OCR 처리 포함한 저장 (시간이 걸릴 수 있음)
-      toast.loading('이미지 텍스트를 추출하는 중...', { id: 'saving' });
+      toast.loading(t('extractingText'), { id: 'saving' });
       
       await window.electronAPI.saveScrap(scrapData);
       
-      toast.success('스크랩이 저장되었습니다!', { id: 'saving' });
+      toast.success(t('scrapSaved'), { id: 'saving' });
       
       setTimeout(() => {
         window.electronAPI.closeCommentWindow();
@@ -69,7 +71,7 @@ const CommentWindow = () => {
       
     } catch (error) {
       console.error('스크랩 저장 실패:', error);
-      toast.error('저장에 실패했습니다', { id: 'saving' });
+      toast.error(t('saveFailed'), { id: 'saving' });
       setSaving(false);
       setOcrProcessing(false);
       setShowCategorySelector(false);
@@ -84,7 +86,7 @@ const CommentWindow = () => {
     <div className="flex flex-col h-screen bg-white">
       <div className="flex-1 flex flex-col p-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-          📷 스크랩 저장
+          📷 {t('scrapSave')}
         </h2>
         
         <div className="flex-1 mb-4">
@@ -92,7 +94,7 @@ const CommentWindow = () => {
             {imagePath && !imageError ? (
               <img
                 src={window.electronAPI.getImageUrl(imagePath)}
-                alt="캡처된 스크린샷"
+                alt={t('capturedScreenshot')}
                 className="w-full h-full object-contain"
                 onError={handleImageError}
               />
@@ -100,7 +102,7 @@ const CommentWindow = () => {
               <div className="flex items-center justify-center h-full text-gray-400">
                 <div className="text-center">
                   <div className="text-4xl mb-2">🖼️</div>
-                  <div className="text-sm">이미지를 불러오는 중...</div>
+                  <div className="text-sm">{t('loadingImage')}</div>
                 </div>
               </div>
             )}
@@ -115,7 +117,7 @@ const CommentWindow = () => {
             >
               <div className="flex items-center">
                 <div className="text-blue-600 mr-2">🔗</div>
-                <div className="text-sm text-blue-700 font-medium">출처 URL</div>
+                <div className="text-sm text-blue-700 font-medium">{t('sourceUrl')}</div>
               </div>
               <div className="text-blue-600">
                 {showUrl ? (
@@ -140,7 +142,7 @@ const CommentWindow = () => {
                       window.electronAPI && window.electronAPI.openExternal && window.electronAPI.openExternal(sourceUrl);
                     }}
                     className="hover:underline cursor-pointer"
-                    title="클릭하여 브라우저에서 열기"
+                    title={t('clickToOpenInBrowser')}
                   >
                     {sourceUrl}
                   </a>
@@ -152,12 +154,12 @@ const CommentWindow = () => {
         
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            💭 코멘트를 입력하세요...
+            💭 {t('commentPlaceholder')}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="이 스크랩에 대한 메모를 남겨보세요"
+            placeholder={t('commentInputPlaceholder')}
             className="w-full h-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             autoFocus
             disabled={saving}
@@ -170,14 +172,14 @@ const CommentWindow = () => {
             className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             disabled={saving}
           >
-            취소
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
             className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
             disabled={!imagePath || saving}
           >
-            {saving ? (ocrProcessing ? 'OCR 처리 중...' : '저장 중...') : '저장'}
+            {saving ? (ocrProcessing ? t('ocrProcessing') : t('saving')) : t('save')}
           </button>
         </div>
       </div>
