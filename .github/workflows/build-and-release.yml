@@ -118,14 +118,14 @@ jobs:
         # macOS 코드 사이닝 비활성화 (개발용)
         CSC_IDENTITY_AUTO_DISCOVERY: false
 
-    - name: List build artifacts
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          dir dist\ /a
-        else
-          ls -la dist/
-        fi
-      shell: bash
+    - name: List build artifacts (Windows)
+      if: runner.os == 'Windows'
+      run: dir dist\ /a
+      shell: cmd
+
+    - name: List build artifacts (Unix)
+      if: runner.os != 'Windows'
+      run: ls -la dist/
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -155,13 +155,7 @@ jobs:
         path: ./artifacts
 
     - name: Display structure of downloaded files
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          dir artifacts\ /a
-        else
-          ls -la artifacts/
-        fi
-      shell: bash
+      run: ls -la artifacts/
 
     - name: Get version and changelog
       id: version
