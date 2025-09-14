@@ -88,7 +88,7 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 
 <table align="center">
 <tr>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
 ### 🍎 macOS
 ![macOS](https://img.shields.io/badge/macOS-10.11+-blue?style=for-the-badge&logo=apple)
@@ -98,18 +98,10 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 - 드래그 앤 드롭으로 Applications 폴더에 설치
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
 ### 🪟 Windows  
-![Windows](https://img.shields.io/badge/Windows-7%2F10%2F11-blue?style=for-the-badge&logo=windows)
-
-**x64 & x86 지원**
-- `.exe` 파일 다운로드  
-- 실행하여 설치 마법사 따라하기
-
-</td>
-<td align="center" width="33%">
-
+- 지원 예정
 
 </td>
 </tr>
