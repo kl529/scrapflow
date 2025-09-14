@@ -168,14 +168,22 @@ jobs:
         echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
         # 간단한 changelog 생성
+        CHANGELOG=""
         if git tag --list | grep -q "${VERSION%.*}"; then
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
           if [[ -n "$PREVIOUS_TAG" ]]; then
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            git log --pretty=format:"- %s (%an)" ${PREVIOUS_TAG}..HEAD >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            CHANGELOG=$(git log --pretty=format:"- %s (%an)" ${PREVIOUS_TAG}..HEAD | head -20)
           fi
         fi
+
+        # CHANGELOG를 파일로 저장 후 읽기
+        echo "$CHANGELOG" > changelog.tmp
+        {
+          echo "CHANGELOG<<CHANGELOG_EOF"
+          cat changelog.tmp
+          echo "CHANGELOG_EOF"
+        } >> $GITHUB_OUTPUT
+        rm -f changelog.tmp
       shell: bash
 
     - name: Create Release
