@@ -84,7 +84,7 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 
 ### 🚀 빠른 다운로드
 
-최신 버전을 다운로드하세요: **[📦 Releases 페이지](https://github.com/kl529/scrapflow/releases/latest)**
+최신 버전을 다운로드하세요: **[📦 Releases 페이지](https://github.com/kl529/scrapflow/releases)**
 
 <table align="center">
 <tr>
