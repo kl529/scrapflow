@@ -36,7 +36,9 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 
 ## ✨ 주요 기능
 ### ⚡️ 초고속 캡처
-<img width="500" height="650" alt="스크린샷 2025-09-14 오후 3 44 08" src="https://github.com/user-attachments/assets/9674d30e-3e15-404d-a2db-6b8c85e08c1f" />
+<p align="center">
+  <img width="500" height="650" alt="스크린샷 2025-09-14 오후 3 44 08" src="https://github.com/user-attachments/assets/9674d30e-3e15-404d-a2db-6b8c85e08c1f" />
+</p>
 
 - **단축키 한 번**으로 즉시 스크린샷
 - **3초 완료**: 캡처 → 코멘트 → 저장
@@ -44,7 +46,9 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 - **자동 URL 감지**: 현재 보고 있는 웹페이지 출처 저장
 
 ### 🧠 스마트 검색
-<img width="1199" height="803" alt="스크린샷 2025-09-14 오후 3 42 30" src="https://github.com/user-attachments/assets/5b4ac037-26bd-47b7-8cb4-00e447082ca4" />
+<p align="center">
+  <img width="1199" height="803" alt="스크린샷 2025-09-14 오후 3 42 30" src="https://github.com/user-attachments/assets/5b4ac037-26bd-47b7-8cb4-00e447082ca4" />
+</p>
 
 - **OCR 텍스트 인식**: 이미지 속 한글/영문 자동 추출
 - **통합 검색**: 코멘트 + OCR 텍스트 동시 검색
@@ -52,15 +56,18 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크�
 - **카테고리별 필터**: 원하는 분류만 골라보기
 
 ### 🎨 아름다운 공유
-<img width="899" height="694" alt="스크린샷 2025-09-14 오후 3 44 53" src="https://github.com/user-attachments/assets/d25b47f9-a7d8-4b9d-8df3-1012fd0ce613" />
+<p align="center">
+  <img width="899" height="694" alt="스크린샷 2025-09-14 오후 3 44 53" src="https://github.com/user-attachments/assets/d25b47f9-a7d8-4b9d-8df3-1012fd0ce613" />
+</p>
 
 - **SNS 공유 이미지**: 자동으로 예쁜 템플릿 생성
 - **브랜딩 포함**: ScrapFlow 로고와 색상 적용
 - **모든 플랫폼**: Instagram, Twitter, LinkedIn 등
 
 ### 📊 활동 시각화
-<img width="1197" height="802" alt="스크린샷 2025-09-14 오후 3 42 53" src="https://github.com/user-attachments/assets/529f52ee-a865-4f3c-95fe-9455337fa8e8" />
-
+<p align="center">
+  <img width="1197" height="802" alt="스크린샷 2025-09-14 오후 3 42 53" src="https://github.com/user-attachments/assets/529f52ee-a865-4f3c-95fe-9455337fa8e8" />
+</p>
 - **GitHub 스타일 히트맵**: 스크랩 활동 한눈에 파악
 - **통계 대시보드**: 카테고리별, 날짜별 분석
 - **성과 추적**: 지식 축적 과정을 시각적으로 확인
