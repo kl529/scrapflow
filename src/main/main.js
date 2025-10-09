@@ -43,6 +43,10 @@ class ScrapFlowApp {
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
           this.createMainWindow();
+        } else if (this.mainWindow) {
+          // 윈도우가 숨겨진 상태면 다시 표시
+          this.mainWindow.show();
+          this.mainWindow.focus();
         }
       });
     });
