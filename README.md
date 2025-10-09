@@ -15,7 +15,7 @@
 
 ---
 
-ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 혁신적인 스크린샷 기반 스크랩북 애플리케이션입니다.  
+ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 스크린샷 기반 스크랩북 애플리케이션입니다.  
 웹에서 발견한 소중한 정보를 빠르게 캡처하고, 생각과 함께 체계적으로 정리하세요.
 
 </div>
@@ -35,39 +35,44 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 혁신�
 - **예쁜 공유 이미지** 생성으로 SNS 공유까지
 
 ## ✨ 주요 기능
-
-<table>
-<tr>
-<td width="50%">
-
 ### ⚡️ 초고속 캡처
+<p align="center">
+  <img width="500" height="650" alt="스크린샷 2025-09-14 오후 3 44 08" src="https://github.com/user-attachments/assets/9674d30e-3e15-404d-a2db-6b8c85e08c1f" />
+</p>
+
 - **단축키 한 번**으로 즉시 스크린샷
 - **3초 완료**: 캡처 → 코멘트 → 저장
-- **백그라운드 상주**로 언제든지 사용 가능
+- **백그라운드 실행**로 언제든지 사용 가능
 - **자동 URL 감지**: 현재 보고 있는 웹페이지 출처 저장
 
 ### 🧠 스마트 검색
+<p align="center">
+  <img width="1199" height="803" alt="스크린샷 2025-09-14 오후 3 42 30" src="https://github.com/user-attachments/assets/5b4ac037-26bd-47b7-8cb4-00e447082ca4" />
+</p>
+
 - **OCR 텍스트 인식**: 이미지 속 한글/영문 자동 추출
 - **통합 검색**: 코멘트 + OCR 텍스트 동시 검색
 - **실시간 필터**: 입력하는 즉시 결과 표시
 - **카테고리별 필터**: 원하는 분류만 골라보기
 
-</td>
-<td width="50%">
-
 ### 🎨 아름다운 공유
+<p align="center">
+  <img width="899" height="694" alt="스크린샷 2025-09-14 오후 3 44 53" src="https://github.com/user-attachments/assets/d25b47f9-a7d8-4b9d-8df3-1012fd0ce613" />
+</p>
+
 - **SNS 공유 이미지**: 자동으로 예쁜 템플릿 생성
 - **브랜딩 포함**: ScrapFlow 로고와 색상 적용
 - **모든 플랫폼**: Instagram, Twitter, LinkedIn 등
 
 ### 📊 활동 시각화
+<p align="center">
+  <img width="1197" height="802" alt="스크린샷 2025-09-14 오후 3 42 53" src="https://github.com/user-attachments/assets/529f52ee-a865-4f3c-95fe-9455337fa8e8" />
+</p>
 - **GitHub 스타일 히트맵**: 스크랩 활동 한눈에 파악
 - **통계 대시보드**: 카테고리별, 날짜별 분석
 - **성과 추적**: 지식 축적 과정을 시각적으로 확인
 
-</td>
-</tr>
-</table>
+---
 
 ### 🔐 개인정보 보호 우선
 - ✅ **완전 오프라인**: 모든 데이터 로컬 저장
@@ -79,11 +84,11 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 혁신�
 
 ### 🚀 빠른 다운로드
 
-최신 버전을 다운로드하세요: **[📦 Releases 페이지](https://github.com/kl529/scrapflow/releases/latest)**
+최신 버전을 다운로드하세요: **[📦 Releases 페이지](https://github.com/kl529/scrapflow/releases)**
 
 <table align="center">
 <tr>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
 ### 🍎 macOS
 ![macOS](https://img.shields.io/badge/macOS-10.11+-blue?style=for-the-badge&logo=apple)
@@ -93,18 +98,10 @@ ScrapFlow는 **디지털 콘텐츠의 휘발성 문제**를 해결하는 혁신�
 - 드래그 앤 드롭으로 Applications 폴더에 설치
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="50%">
 
 ### 🪟 Windows  
-![Windows](https://img.shields.io/badge/Windows-7%2F10%2F11-blue?style=for-the-badge&logo=windows)
-
-**x64 & x86 지원**
-- `.exe` 파일 다운로드  
-- 실행하여 설치 마법사 따라하기
-
-</td>
-<td align="center" width="33%">
-
+- 지원 예정
 
 </td>
 </tr>
@@ -189,7 +186,7 @@ ScrapFlow는 모든 데이터를 로컬에 안전하게 저장합니다:
 
 ---
 
-## 🛠️ 개발자 정보
+## 🛠️ 개발 정보
 
 ### 🏗️ 아키텍처
 
@@ -210,37 +207,6 @@ ScrapFlow는 모든 데이터를 로컬에 안전하게 저장합니다:
     │ GitHub      │
     │ Actions     │
     └─────────────┘
-```
-
-### ⚡️ 성능 개선사항
-
-| 항목 | 기존 | 개선 후 | 개선율 |
-|------|------|---------|---------|
-| **앱 시작 시간** | 2초 | 1초 이내 | 50%↑ |
-| **OCR 처리** | 2-3초 | 1초 이내 | 65%↑ |
-| **메모리 사용량** | 80-120MB | 60MB 이하 | 25%↓ |
-| **빌드 시간** | 15분 | 8분 | 45%↑ |
-
-### 🏁 로컬 개발 환경
-
-```bash
-# 1. 저장소 클론
-git clone https://github.com/kl529/scrapflow.git
-cd scrapflow
-
-# 2. 의존성 설치
-npm install
-
-# 3. 개발 모드 실행
-npm run dev
-
-# 4. 프로덕션 빌드
-npm run build
-
-# 5. 플랫폼별 패키징
-npm run build-mac    # macOS
-npm run build-win    # Windows  
-npm run build-all    # 모든 플랫폼
 ```
 
 ---
