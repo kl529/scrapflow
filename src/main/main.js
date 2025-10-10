@@ -20,25 +20,19 @@ class ScrapFlowApp {
 
   setupApp() {
     app.whenReady().then(async () => {
-      const startTime = Date.now();
-      console.log('🚀 ScrapFlow 앱 시작...');
-      
       // 동시에 실행 가능한 초기화 작업들을 병렬로 처리
       await Promise.all([
         this.setupProtocol(),
         this.database.init(),
         this.setupTray(),
       ]);
-      
+
       // 메인 윈도우는 즉시 생성하되 보이지 않게 설정
       this.createMainWindow();
       this.registerGlobalShortcuts();
-      
+
       // OCR 서비스는 백그라운드에서 지연 초기화 (논블로킹)
       this.initOCRLazy();
-      
-      const initTime = Date.now() - startTime;
-      console.log(`✅ ScrapFlow 초기화 완료: ${initTime}ms`);
       
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -68,7 +62,6 @@ class ScrapFlowApp {
   async initOCR() {
     try {
       await this.ocrService.initialize();
-      console.log('OCR 서비스 초기화 완료');
     } catch (error) {
       console.error('OCR 서비스 초기화 실패:', error.message);
     }
@@ -79,11 +72,7 @@ class ScrapFlowApp {
     // 앱 시작 후 2초 후에 OCR 초기화 시작
     setTimeout(async () => {
       try {
-        console.log('🔤 OCR 서비스 백그라운드 초기화 시작...');
-        const startTime = Date.now();
         await this.ocrService.initialize();
-        const initTime = Date.now() - startTime;
-        console.log(`✅ OCR 서비스 초기화 완료: ${initTime}ms`);
       } catch (error) {
         console.error('OCR 서비스 초기화 실패:', error.message);
       }
@@ -102,7 +91,7 @@ class ScrapFlowApp {
     const windowConfig = {
       width: 1200,
       height: 800,
-      icon: path.join(__dirname, '../../logo.png'),
+      icon: path.join(__dirname, '../logo.png'),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -118,40 +107,23 @@ class ScrapFlowApp {
 
     this.mainWindow = new BrowserWindow(windowConfig);
 
-    const startUrl = isDev 
-      ? 'http://localhost:3000' 
-      : `file://${path.join(__dirname, '../../build/index.html')}`;
-    
-    // 페이지 로딩 시작 시간 측정
-    const loadStartTime = Date.now();
+    const startUrl = isDev
+      ? 'http://localhost:3000'
+      : `file://${path.join(__dirname, '../index.html')}`;
+
     this.mainWindow.loadURL(startUrl);
 
     this.mainWindow.once('ready-to-show', () => {
-      const loadTime = Date.now() - loadStartTime;
-      console.log(`🖼️ 메인 윈도우 로딩 완료: ${loadTime}ms`);
       this.mainWindow.show();
-      
-      // 개발 모드에서만 개발자 도구 자동 열기
-      if (isDev) {
-        // this.mainWindow.webContents.openDevTools();
-      }
     });
 
     this.mainWindow.on('closed', () => {
       this.mainWindow = null;
     });
-
-    // 메모리 사용량 모니터링 (개발 모드에서만)
-    if (isDev) {
-      this.mainWindow.webContents.on('did-finish-load', () => {
-        const memoryUsage = process.memoryUsage();
-        console.log(`📊 메모리 사용량: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`);
-      });
-    }
   }
 
   setupTray() {
-    const iconPath = path.join(__dirname, '../../logo.png');
+    const iconPath = path.join(__dirname, '../logo.png');
     
     // 아이콘 파일이 없으면 기본 아이콘 사용하거나 건너뛰기
     try {
@@ -203,18 +175,12 @@ class ScrapFlowApp {
 
   registerGlobalShortcuts() {
     const ret = globalShortcut.register('CommandOrControl+Shift+S', () => {
-      console.log('글로벌 단축키 감지됨: CommandOrControl+Shift+S');
       this.takeScreenshot();
     });
 
     if (!ret) {
       console.error('글로벌 단축키 등록 실패');
-    } else {
-      console.log('글로벌 단축키 등록 성공: CommandOrControl+Shift+S');
     }
-
-    // 단축키가 등록되었는지 확인
-    console.log('등록된 단축키:', globalShortcut.isRegistered('CommandOrControl+Shift+S'));
   }
 
   async getCurrentBrowserUrl() {
@@ -222,15 +188,14 @@ class ScrapFlowApp {
       const { exec } = require('child_process');
       const { promisify } = require('util');
       const execAsync = promisify(exec);
-      
+
       // 먼저 현재 활성 애플리케이션이 브라우저인지 확인
       let frontmostApp = null;
       try {
         const { stdout } = await execAsync(`osascript -e 'tell application "System Events" to set frontApp to name of first application process whose frontmost is true'`);
         frontmostApp = stdout.trim();
-        console.log(`현재 활성 앱: ${frontmostApp}`);
       } catch (error) {
-        console.log('활성 앱 확인 실패:', error.message);
+        // 실패시 조용히 무시
       }
       
       // 브라우저별 URL 가져오기 스크립트 (더 안전한 방식)
@@ -321,47 +286,39 @@ class ScrapFlowApp {
       const activeBrowser = browserScripts.find(browser => browser.processName === frontmostApp);
       if (activeBrowser) {
         try {
-          console.log(`활성 브라우저 ${activeBrowser.name}에서 URL 확인 중...`);
           const { stdout, stderr } = await execAsync(`osascript -e '${activeBrowser.script}'`);
-          
+
           if (!stderr) {
             const url = stdout.trim();
-            console.log(`${activeBrowser.name} 응답:`, url);
-            
+
             if (url && url !== '' && !url.includes('error') && url.startsWith('http')) {
-              console.log(`✅ 활성 브라우저 ${activeBrowser.name}에서 URL 감지:`, url);
               return url;
             }
           }
         } catch (error) {
-          console.log(`활성 브라우저 ${activeBrowser.name} 시도 실패:`, error.message);
+          // 실패시 조용히 무시
         }
       }
       
       // 활성 앱에서 URL을 찾지 못한 경우 다른 브라우저들을 시도
       for (const browser of browserScripts) {
         if (browser.processName === frontmostApp) continue; // 이미 시도함
-        
+
         try {
-          console.log(`${browser.name} URL 확인 중...`);
           const { stdout, stderr } = await execAsync(`osascript -e '${browser.script}'`);
-          
+
           if (!stderr) {
             const url = stdout.trim();
-            console.log(`${browser.name} 응답:`, url);
-            
+
             if (url && url !== '' && !url.includes('error') && url.startsWith('http')) {
-              console.log(`✅ ${browser.name}에서 URL 감지:`, url);
               return url;
             }
           }
         } catch (error) {
-          console.log(`${browser.name} 시도 실패:`, error.message);
           continue;
         }
       }
-      
-      console.log('❌ 활성 브라우저 탭 URL을 찾을 수 없음');
+
       return null;
     } catch (error) {
       console.error('브라우저 URL 가져오기 실패:', error);
@@ -371,15 +328,12 @@ class ScrapFlowApp {
 
   async takeScreenshot() {
     try {
-      console.log('macOS 네이티브 스크린샷 시작...');
-      
       // 스크린샷 찍기 전에 브라우저 URL 가져오기 (백그라운드에서 숨기기 전에)
       const currentUrl = await this.getCurrentBrowserUrl();
-      
+
       // 현재 활성 윈도우를 기억하고 Electron 앱을 백그라운드로 숨기기
       if (this.mainWindow && this.mainWindow.isVisible()) {
         this.mainWindow.hide();
-        console.log('메인 윈도우를 임시로 숨김');
       }
       
       // 잠시 대기하여 다른 앱이 포커스를 받을 시간을 줌
@@ -397,17 +351,11 @@ class ScrapFlowApp {
       const screencapture = spawn('screencapture', ['-i', '-x', filepath]);
       
       screencapture.on('close', (code) => {
-        // 메인 윈도우를 다시 보이게 함 (필요한 경우)
-        // this.mainWindow가 필요하면 다시 show
-        
         if (code === 0) {
           // 성공적으로 캡처되었으면 코멘트 윈도우 표시
-          console.log('스크린샷 캡처 성공:', filepath);
           this.showCommentWindow(filepath, currentUrl);
         } else if (code === 1) {
           // 사용자가 ESC로 취소한 경우
-          console.log('사용자가 스크린샷 캡처를 취소했습니다.');
-          // 취소 시에만 메인 윈도우를 다시 보이게 함
           if (this.mainWindow) {
             this.mainWindow.show();
           }
@@ -458,7 +406,7 @@ class ScrapFlowApp {
         height: 650,
         resizable: false,
         alwaysOnTop: true,
-        icon: path.join(__dirname, '../../logo.png'),
+        icon: path.join(__dirname, '../logo.png'),
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
@@ -471,7 +419,7 @@ class ScrapFlowApp {
 
     const commentUrl = isDev
       ? 'http://localhost:3000/#/comment'
-      : `file://${path.join(__dirname, '../../build/index.html#/comment')}`;
+      : `file://${path.join(__dirname, '../index.html#/comment')}`;
     
     this.commentWindow.loadURL(commentUrl);
     
