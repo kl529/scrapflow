@@ -1,7 +1,7 @@
 {
   "name": "scrapflow",
   "version": "1.0.0",
-  "description": "스크린샷 기반 스크랩북 데스크톱 애플리케이션",
+  "description": "\uc2a4\ud06c\ub9b0\uc0f7 \uae30\ubc18 \uc2a4\ud06c\ub7a9\ubd81 \ub370\uc2a4\ud06c\ud1b1 \uc560\ud50c\ub9ac\ucf00\uc774\uc158",
   "main": "build/main/main.js",
   "homepage": "./",
   "scripts": {
@@ -61,7 +61,7 @@
     ],
     "extraMetadata": {
       "main": "build/main/main.js",
-      "description": "스크린샷 기반 스크랩북 - 생각을 기록하고 아이디어를 연결하세요"
+      "description": "\uc2a4\ud06c\ub9b0\uc0f7 \uae30\ubc18 \uc2a4\ud06c\ub7a9\ubd81 - \uc0dd\uac01\uc744 \uae30\ub85d\ud558\uace0 \uc544\uc774\ub514\uc5b4\ub97c \uc5f0\uacb0\ud558\uc138\uc694"
     },
     "publish": {
       "provider": "github",
@@ -132,5 +132,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "react-router": {
+      "@remix-run/router": "1.23.4"
+    },
+    "react-router-dom": {
+      "@remix-run/router": "1.23.4"
+    }
   }
 }
